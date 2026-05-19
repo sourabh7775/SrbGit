@@ -56,6 +56,20 @@ Resulting APK: `app/build/outputs/apk/debug/app-debug.apk`
 
 Alternatively, open the project in Android Studio and use **Run > Run 'app'**.
 
+## Getting the APK without a local toolchain
+
+A GitHub Actions workflow (`.github/workflows/android.yml`) builds a debug APK
+on every push. To grab it:
+
+1. Push to GitHub (or open the repo on github.com).
+2. Open the **Actions** tab and click the latest **Android CI** run on this
+   branch.
+3. Scroll to **Artifacts** and download **SoraAdhya-debug-apk**.
+4. Unzip; install `SoraAdhya-debug.apk` on your device (enable "Install
+   unknown apps" for your file manager / browser if prompted).
+
+You can also trigger a build manually from the Actions tab via **Run workflow**.
+
 ## Customizing the target URL
 
 The site URL lives in `MainActivity.kt` as `homeUrl`. Update it there if the
