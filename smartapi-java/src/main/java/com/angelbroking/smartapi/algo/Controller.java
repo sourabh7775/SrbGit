@@ -3,6 +3,7 @@ package com.angelbroking.smartapi.algo;
 import com.angelbroking.smartapi.algo.parser.InstrumentFetch;
 import com.angelbroking.smartapi.algo.rds.InstrumentsRepository;
 import com.angelbroking.smartapi.algo.records.Instrument;
+import com.angelbroking.smartapi.algo.strategy.AiTradingStrategy;
 import com.angelbroking.smartapi.algo.strategy.NiftyMomentumStrategy;
 import com.angelbroking.smartapi.http.exceptions.SmartAPIException;
 import com.angelbroking.smartapi.records.ClientInfo;
@@ -33,6 +34,9 @@ public class Controller {
 
     @Autowired
     private NiftyMomentumStrategy niftyMomentumStrategy;
+
+    @Autowired
+    private AiTradingStrategy aiTradingStrategy;
 
     @PostMapping("v1/login")
     public String login(@RequestBody ClientInfo clientInfo) {
@@ -87,5 +91,25 @@ public class Controller {
     @PostMapping("v1/strategy/nifty-momentum")
     public String runNiftyMomentum() {
         return niftyMomentumStrategy.execute();
+    }
+
+    /**
+     * AI-powered strategy: Claude analyzes live market data and decides
+     * whether to buy CE, buy PE, or hold — with hard risk guardrails.
+     *
+     * Prerequisites (in order):
+     *   1. POST /v1/login
+     *   2. GET  /v1/instruments
+     *   Set ANTHROPIC_API_KEY environment variable before starting the app.
+     */
+    @PostMapping("v1/strategy/ai-trade")
+    public String runAiTrade() {
+        return aiTradingStrategy.execute();
+    }
+
+    /** Current risk manager state: daily P&L, trade count, halted flag. */
+    @GetMapping("v1/strategy/status")
+    public String strategyStatus() {
+        return aiTradingStrategy.status();
     }
 }
