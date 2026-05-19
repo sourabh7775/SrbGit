@@ -1,13 +1,11 @@
 package com.angelbroking.smartapi.algo.strategy;
 
 import com.angelbroking.smartapi.algo.Login;
+import com.angelbroking.smartapi.algo.records.Instrument;
 import com.angelbroking.smartapi.algo.records.PriceData;
-import com.angelbroking.smartapi.algo.records.Symbol;
 import com.angelbroking.smartapi.algo.service.InstrumentService;
 import com.angelbroking.smartapi.models.OrderParams;
 import com.angelbroking.smartapi.utils.Constants;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,11 +35,8 @@ import java.util.Optional;
 @Slf4j
 public class AiTradingStrategy {
 
-    // NIFTY 50 index token on NSE — used for spot LTP
     private static final String NIFTY_INDEX_TOKEN  = "99926000";
     private static final String NIFTY_INDEX_SYMBOL = "Nifty 50";
-
-    // Active NIFTY near-month/week futures token — UPDATE before each expiry
     private static final String NIFTY_FUTURES_TOKEN = "35001";
 
     private static final String NSE_EXCHANGE  = "NSE";
@@ -55,34 +50,20 @@ public class AiTradingStrategy {
     @Autowired private ClaudeDecisionEngine claudeEngine;
     @Autowired private RiskManager          riskManager;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    // -----------------------------------------------------------------------
-    // Public entry points
-    // -----------------------------------------------------------------------
-
-    /**
-     * Main strategy loop: gather data → Claude decides → risk check → execute.
-     * Returns a human-readable summary of the outcome.
-     */
     public String execute() {
         if (Login.smartConnect == null) {
             return "Not logged in — call POST /v1/login first";
         }
-
         try {
             MarketContext ctx = buildMarketContext();
-
             TradeDecision decision = claudeEngine.decide(ctx);
 
             if ("HOLD".equals(decision.action())) {
                 return "HOLD | " + decision.reason() + "\n" + riskManager.status();
             }
-
             if (!riskManager.canTrade(decision)) {
                 return "Trade BLOCKED by risk manager.\n" + riskManager.status();
             }
-
             return executeTrade(ctx, decision);
 
         } catch (Exception e) {
@@ -95,20 +76,15 @@ public class AiTradingStrategy {
         return riskManager.status();
     }
 
-    // -----------------------------------------------------------------------
-    // Market context builder
-    // -----------------------------------------------------------------------
-
     private MarketContext buildMarketContext() throws Exception {
         double niftySpot = fetchNiftyLtp();
         double atmStrike = roundToNearest50(niftySpot);
 
-        List<PriceData> candles    = fetchTodayCandles();
+        List<PriceData> candles   = fetchTodayCandles();
         List<Double>    swingHighs = swingHighPrices(candles);
         List<Double>    swingLows  = swingLowPrices(candles);
 
-        // Resolve nearest expiry once so we reuse it for both CE and PE LTP calls
-        List<String> expiries    = instrumentService.getAllExpiries();
+        List<String> expiries      = instrumentService.getExpiries();
         String       nearestExpiry = expiries.isEmpty() ? "" : selectNearestExpiry(expiries);
 
         double atmCeLtp   = fetchOptionLtp(atmStrike, "CE", nearestExpiry);
@@ -116,7 +92,7 @@ public class AiTradingStrategy {
         String greeksJson = fetchOptionGreeks(nearestExpiry);
         double pcr        = fetchPutCallRatio();
 
-        log.info("Context — spot={} strike={} CE_ltp={} PE_ltp={} PCR={} candles={}",
+        log.info("Context — spot={} strike={} CE={} PE={} PCR={} candles={}",
                 niftySpot, atmStrike, atmCeLtp, atmPeLtp, pcr, candles.size());
 
         return MarketContext.builder()
@@ -129,39 +105,32 @@ public class AiTradingStrategy {
                 .atmPeLtp(atmPeLtp)
                 .greeksJson(greeksJson)
                 .putCallRatio(pcr)
-                .hasOpenPosition(false) // TODO: replace with smartConnect.getPosition() check
+                .hasOpenPosition(false)
                 .dailyPnl(riskManager.getDailyPnl())
                 .timestamp(LocalDateTime.now().format(DATE_FMT))
                 .build();
     }
 
-    // -----------------------------------------------------------------------
-    // Trade execution
-    // -----------------------------------------------------------------------
-
     private String executeTrade(MarketContext ctx, TradeDecision decision) throws Exception {
         String optionType = "BUY_CE".equals(decision.action()) ? "CE" : "PE";
 
-        List<String> expiries = instrumentService.getAllExpiries();
+        List<String> expiries = instrumentService.getExpiries();
         if (expiries.isEmpty()) {
             return "No expiries in DB — call GET /v1/instruments first";
         }
         String nearestExpiry = selectNearestExpiry(expiries);
 
-        List<String>     options   = instrumentService.getOptionsByExpiryAndStrike(
-                nearestExpiry, ctx.getAtmStrike());
-        Optional<String> symbolOpt = options.stream()
-                .filter(s -> s.startsWith("NIFTY") && s.endsWith(optionType))
-                .findFirst();
-
-        if (symbolOpt.isEmpty()) {
+        Optional<Instrument> instOpt =
+                instrumentService.findByExpiryStrikeAndType(nearestExpiry, ctx.getAtmStrike(), optionType);
+        if (instOpt.isEmpty()) {
             return "No NIFTY " + optionType + " found at strike "
                     + ctx.getAtmStrike() + " expiry " + nearestExpiry;
         }
 
-        String optionSymbol  = symbolOpt.get();
-        String token         = instrumentService.getToken(new Symbol(optionSymbol));
-        double entryPremium  = "CE".equals(optionType) ? ctx.getAtmCeLtp() : ctx.getAtmPeLtp();
+        Instrument inst        = instOpt.get();
+        String     optionSymbol = inst.getSymbol();
+        String     token        = inst.getToken();
+        double     entryPremium = "CE".equals(optionType) ? ctx.getAtmCeLtp() : ctx.getAtmPeLtp();
 
         if (entryPremium <= 0) {
             return "Invalid premium (0) for " + optionSymbol + " — cannot size SL/target";
@@ -180,10 +149,10 @@ public class AiTradingStrategy {
                 "TRADE ENTERED%n"
                 + "Option  : %s%n"
                 + "Spot    : %.2f | Strike : %.0f%n"
-                + "Premium : %.2f | SL     : %.2f (-%.0f%%) | Target : %.2f (+%.0f%%)%n"
+                + "Premium : %.2f | SL : %.2f (-%.0f%%) | Target : %.2f (+%.0f%%)%n"
                 + "Confidence : %.2f | Regime : %s | Risk : %s%n"
                 + "Reason  : %s%n"
-                + "Risk    : %s",
+                + "%s",
                 optionSymbol,
                 ctx.getNiftySpot(), ctx.getAtmStrike(),
                 entryPremium, slPrice, decision.slPercent(),
@@ -193,14 +162,12 @@ public class AiTradingStrategy {
                 riskManager.status());
     }
 
-    // -----------------------------------------------------------------------
-    // Market data helpers
-    // -----------------------------------------------------------------------
+    // ---- market data helpers ------------------------------------------------
 
-    private double fetchNiftyLtp() {
-        JSONObject resp =
-                Login.smartConnect.getLTP(NSE_EXCHANGE, NIFTY_INDEX_SYMBOL, NIFTY_INDEX_TOKEN);
-        return resp.getJSONObject("data").getDouble("ltp");
+    private double fetchNiftyLtp() throws Exception {
+        JSONObject data = Login.smartConnect.getLTP(NSE_EXCHANGE, NIFTY_INDEX_SYMBOL, NIFTY_INDEX_TOKEN);
+        if (data == null) throw new RuntimeException("getLTP returned null");
+        return data.getDouble("ltp");
     }
 
     private List<PriceData> fetchTodayCandles() throws Exception {
@@ -215,17 +182,17 @@ public class AiTradingStrategy {
         req.put("fromdate",    fromdate);
         req.put("todate",      todate);
 
-        JSONArray raw     = Login.smartConnect.candleData(req);
+        JSONArray raw = Login.smartConnect.candleData(req);
         List<PriceData> candles = new ArrayList<>();
         for (int i = 0; i < raw.length(); i++) {
-            JsonNode node = objectMapper.readTree(raw.get(i).toString());
+            JSONArray bar = raw.getJSONArray(i);
             candles.add(new PriceData(
-                    node.get(0).asText(),
-                    node.get(1).asDouble(),
-                    node.get(2).asDouble(),
-                    node.get(3).asDouble(),
-                    node.get(4).asDouble(),
-                    node.get(5).asInt()
+                    bar.getString(0),
+                    bar.getDouble(1),
+                    bar.getDouble(2),
+                    bar.getDouble(3),
+                    bar.getDouble(4),
+                    bar.getLong(5)
             ));
         }
         return candles;
@@ -234,14 +201,12 @@ public class AiTradingStrategy {
     private double fetchOptionLtp(double strike, String type, String expiry) {
         try {
             if (expiry.isEmpty()) return 0.0;
-            List<String> options = instrumentService.getOptionsByExpiryAndStrike(expiry, strike);
-            Optional<String> sym = options.stream()
-                    .filter(s -> s.startsWith("NIFTY") && s.endsWith(type))
-                    .findFirst();
-            if (sym.isEmpty()) return 0.0;
-            String token = instrumentService.getToken(new Symbol(sym.get()));
-            JSONObject resp = Login.smartConnect.getLTP(NFO_EXCHANGE, sym.get(), token);
-            return resp.getJSONObject("data").getDouble("ltp");
+            Optional<Instrument> instOpt =
+                    instrumentService.findByExpiryStrikeAndType(expiry, strike, type);
+            if (instOpt.isEmpty()) return 0.0;
+            Instrument inst = instOpt.get();
+            JSONObject data = Login.smartConnect.getLTP(NFO_EXCHANGE, inst.getSymbol(), inst.getToken());
+            return data != null ? data.getDouble("ltp") : 0.0;
         } catch (Exception e) {
             log.warn("Could not fetch NIFTY {} LTP at {}: {}", type, strike, e.getMessage());
             return 0.0;
@@ -250,10 +215,9 @@ public class AiTradingStrategy {
 
     private String fetchOptionGreeks(String expiry) {
         try {
-            JSONObject req = new JSONObject();
-            req.put("name",       "NIFTY");
-            req.put("expiryDate", expiry);
-            return Login.smartConnect.optionGreek(req).toString();
+            if (expiry.isEmpty()) return "{}";
+            JSONObject data = Login.smartConnect.optionGreek("NIFTY", expiry);
+            return data != null ? data.toString() : "{}";
         } catch (Exception e) {
             log.warn("Could not fetch option Greeks: {}", e.getMessage());
             return "{}";
@@ -262,18 +226,16 @@ public class AiTradingStrategy {
 
     private double fetchPutCallRatio() {
         try {
-            JSONObject resp =
-                    Login.smartConnect.putCallRatio(new JSONObject().put("name", "NIFTY"));
-            return resp.getJSONObject("data").getDouble("putCallRatio");
+            JSONObject data = Login.smartConnect.putCallRatio();
+            if (data == null) return 1.0;
+            return data.optDouble("putCallRatio", 1.0);
         } catch (Exception e) {
             log.warn("Could not fetch PCR — using neutral 1.0: {}", e.getMessage());
             return 1.0;
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Swing detection (same 3-bar pivot logic as Login, returns actual prices)
-    // -----------------------------------------------------------------------
+    // ---- swing detection ----------------------------------------------------
 
     private List<Double> swingHighPrices(List<PriceData> candles) {
         List<Double> result = new ArrayList<>();
@@ -297,60 +259,59 @@ public class AiTradingStrategy {
         return result;
     }
 
-    // -----------------------------------------------------------------------
-    // Order placement
-    // -----------------------------------------------------------------------
+    // ---- order placement ----------------------------------------------------
 
-    private String placeMarketBuy(String symbol, String token) {
+    private String placeMarketBuy(String symbol, String token) throws Exception {
         OrderParams p = new OrderParams();
         p.variety         = Constants.VARIETY_NORMAL;
         p.exchange        = NFO_EXCHANGE;
         p.tradingsymbol   = symbol;
         p.symboltoken     = token;
-        p.transactiontype = "BUY";
+        p.transactiontype = Constants.TRANSACTION_TYPE_BUY;
         p.ordertype       = Constants.ORDER_TYPE_MARKET;
         p.producttype     = Constants.PRODUCT_INTRADAY;
         p.duration        = Constants.DURATION_DAY;
         p.quantity        = NIFTY_LOT_SIZE;
         p.price           = 0.0;
-        return Login.smartConnect.placeOrder(p, Constants.VARIETY_NORMAL).orderId;
+        JSONObject result = Login.smartConnect.placeOrder(p);
+        return result != null ? result.optString("orderid", "") : "";
     }
 
-    private String placeSLOrder(String symbol, String token, double slPrice) {
-        double trigger = roundToTick(slPrice + 0.50);
+    private String placeSLOrder(String symbol, String token, double slPrice) throws Exception {
+        double triggerPrice = roundToTick(slPrice + 0.50);
         OrderParams p = new OrderParams();
         p.variety         = Constants.VARIETY_STOPLOSS;
         p.exchange        = NFO_EXCHANGE;
         p.tradingsymbol   = symbol;
         p.symboltoken     = token;
-        p.transactiontype = "SELL";
+        p.transactiontype = Constants.TRANSACTION_TYPE_SELL;
         p.ordertype       = Constants.ORDER_TYPE_STOPLOSS_LIMIT;
         p.producttype     = Constants.PRODUCT_INTRADAY;
         p.duration        = Constants.DURATION_DAY;
         p.quantity        = NIFTY_LOT_SIZE;
         p.price           = slPrice;
-        p.triggerprice    = String.valueOf(trigger);
-        return Login.smartConnect.placeOrder(p, Constants.VARIETY_STOPLOSS).orderId;
+        p.triggerprice    = triggerPrice;
+        JSONObject result = Login.smartConnect.placeOrder(p);
+        return result != null ? result.optString("orderid", "") : "";
     }
 
-    private String placeTargetOrder(String symbol, String token, double targetPrice) {
+    private String placeTargetOrder(String symbol, String token, double targetPrice) throws Exception {
         OrderParams p = new OrderParams();
         p.variety         = Constants.VARIETY_NORMAL;
         p.exchange        = NFO_EXCHANGE;
         p.tradingsymbol   = symbol;
         p.symboltoken     = token;
-        p.transactiontype = "SELL";
+        p.transactiontype = Constants.TRANSACTION_TYPE_SELL;
         p.ordertype       = Constants.ORDER_TYPE_LIMIT;
         p.producttype     = Constants.PRODUCT_INTRADAY;
         p.duration        = Constants.DURATION_DAY;
         p.quantity        = NIFTY_LOT_SIZE;
         p.price           = targetPrice;
-        return Login.smartConnect.placeOrder(p, Constants.VARIETY_NORMAL).orderId;
+        JSONObject result = Login.smartConnect.placeOrder(p);
+        return result != null ? result.optString("orderid", "") : "";
     }
 
-    // -----------------------------------------------------------------------
-    // Utility
-    // -----------------------------------------------------------------------
+    // ---- utility ------------------------------------------------------------
 
     private double roundToNearest50(double price) {
         return Math.round(price / 50.0) * 50.0;
