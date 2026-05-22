@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For You 💕</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --rose:   #ff6b9d;
+      --pink:   #ffb3cc;
+      --soft:   #fff0f6;
+      --purple: #c084fc;
+      --gold:   #fbbf24;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a0a1e 0%, #2d1042 50%, #1a0a1e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      font-family: 'Lato', sans-serif;
+    }
+
+    /* ── Floating hearts background ── */
+    #hearts-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .heart-float {
+      position: absolute;
+      bottom: -60px;
+      font-size: 1.4rem;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+
+    @keyframes floatUp {
+      0%   { transform: translateY(0) rotate(-10deg) scale(0.8); opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.4; }
+      100% { transform: translateY(-110vh) rotate(10deg) scale(1.2); opacity: 0; }
+    }
+
+    /* ── Sparkle stars ── */
+    .sparkle {
+      position: fixed;
+      width: 4px; height: 4px;
+      background: white;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: twinkle ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50%       { opacity: 1; transform: scale(1.3); }
+    }
+
+    /* ── Main card ── */
+    .card {
+      position: relative;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 180, 210, 0.25);
+      border-radius: 28px;
+      padding: 52px 48px 44px;
+      max-width: 520px;
+      width: 90%;
+      text-align: center;
+      box-shadow:
+        0 0 60px rgba(255, 107, 157, 0.18),
+        0 24px 64px rgba(0,0,0,0.5);
+      animation: cardIn 1.2s cubic-bezier(.22,1,.36,1) forwards;
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+    }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* big heart emoji */
+    .big-heart {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: heartbeat 1.4s ease-in-out infinite;
+      filter: drop-shadow(0 0 14px rgba(255,107,157,0.8));
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14%       { transform: scale(1.18); }
+      28%       { transform: scale(1); }
+      42%       { transform: scale(1.12); }
+      56%       { transform: scale(1); }
+    }
+
+    .subtitle {
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: 0.78rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 18px;
+      opacity: 0.8;
+    }
+
+    h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: clamp(2.4rem, 7vw, 3.2rem);
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      text-shadow: 0 0 30px rgba(255,107,157,0.5);
+    }
+
+    h1 span {
+      background: linear-gradient(90deg, #ff6b9d, #c084fc, #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 auto 24px;
+      width: 80%;
+      color: rgba(255,180,210,0.4);
+      font-size: 0.9rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255,180,210,0.25);
+    }
+
+    .message {
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: 1.05rem;
+      line-height: 1.9;
+      color: rgba(255,230,240,0.88);
+      margin-bottom: 32px;
+    }
+
+    .message strong {
+      color: #ffb3cc;
+      font-weight: 400;
+    }
+
+    /* ── Reasons list ── */
+    .reasons {
+      list-style: none;
+      text-align: left;
+      margin: 0 auto 32px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .reasons li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,107,157,0.08);
+      border: 1px solid rgba(255,107,157,0.15);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      color: rgba(255,230,240,0.82);
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .reasons li:hover {
+      background: rgba(255,107,157,0.16);
+      transform: translateX(4px);
+    }
+
+    .reasons li .icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* ── Surprise button ── */
+    #surprise-btn {
+      display: inline-block;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, #ff6b9d, #c084fc);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-family: 'Lato', sans-serif;
+      font-weight: 400;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(255,107,157,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #surprise-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.12);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #surprise-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(255,107,157,0.5); }
+    #surprise-btn:hover::after { opacity: 1; }
+    #surprise-btn:active { transform: scale(0.97); }
+
+    /* ── Surprise message ── */
+    #surprise-msg {
+      margin-top: 22px;
+      padding: 18px 20px;
+      background: rgba(255,107,157,0.1);
+      border: 1px solid rgba(255,107,157,0.25);
+      border-radius: 16px;
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.35rem;
+      color: #ffb3cc;
+      display: none;
+      animation: fadeSlide 0.6s ease forwards;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,180,210,0.3);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating hearts -->
+<div id="hearts-bg"></div>
+
+<!-- Main card -->
+<div class="card">
+  <span class="big-heart">💖</span>
+  <p class="subtitle">a little note, just for you</p>
+
+  <h1>You are <span>incredibly cute</span>,<br>you know that?</h1>
+
+  <div class="divider">✦</div>
+
+  <p class="message">
+    Every time I think of you, my heart does this silly little dance.<br>
+    You have <strong>no idea</strong> how beautiful you are —<br>
+    the way you smile, the way you laugh,<br>
+    the way you just <strong>exist</strong> so perfectly.
+  </p>
+
+  <ul class="reasons">
+    <li><span class="icon">🌸</span> Your smile literally lights up every room</li>
+    <li><span class="icon">✨</span> The way your eyes sparkle when you're happy</li>
+    <li><span class="icon">🎀</span> You're adorable even when you don't try</li>
+    <li><span class="icon">🌙</span> Your laugh is my favourite sound in the world</li>
+    <li><span class="icon">💫</span> You make everything better just by being you</li>
+  </ul>
+
+  <button id="surprise-btn">💌 Press for a surprise</button>
+
+  <div id="surprise-msg">
+    "In a room full of people, I'd still find only you. 💕"
+  </div>
+
+  <p class="footer-note">made with all the love in the world &nbsp;💗</p>
+</div>
+
+<script>
+  /* ── Generate sparkle stars ── */
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top:  ${Math.random() * 100}vh;
+      animation-duration: ${1.5 + Math.random() * 3}s;
+      animation-delay: ${Math.random() * 4}s;
+      width:  ${Math.random() < 0.3 ? 6 : 3}px;
+      height: ${Math.random() < 0.3 ? 6 : 3}px;
+      opacity: ${0.3 + Math.random() * 0.7};
+    `;
+    document.body.appendChild(s);
+  }
+
+  /* ── Generate floating hearts ── */
+  const EMOJIS = ['💕','💗','💖','💞','🌸','✨','💝','💓','🩷','🌷'];
+  const bg = document.getElementById('hearts-bg');
+
+  function spawnHeart() {
+    const h = document.createElement('div');
+    h.className = 'heart-float';
+    h.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+    h.style.cssText = `
+      left: ${Math.random() * 100}%;
+      font-size: ${0.9 + Math.random() * 1.4}rem;
+      animation-duration: ${7 + Math.random() * 8}s;
+      animation-delay: ${Math.random() * 2}s;
+    `;
+    bg.appendChild(h);
+    h.addEventListener('animationend', () => h.remove());
+  }
+
+  // Spawn hearts continuously
+  for (let i = 0; i < 14; i++) setTimeout(spawnHeart, i * 500);
+  setInterval(spawnHeart, 700);
+
+  /* ── Surprise button ── */
+  const btn = document.getElementById('surprise-btn');
+  const msg = document.getElementById('surprise-msg');
+
+  const surprises = [
+    '"In a room full of people, I\'d still find only you. 💕"',
+    '"You are my favourite notification. 🌸"',
+    '"Home is wherever you are. 🏡💗"',
+    '"You make my heart smile in ways I can\'t explain. ✨"',
+    '"I like you a lot. Like, a really, really lot. 🩷"',
+  ];
+  let idx = 0;
+
+  btn.addEventListener('click', () => {
+    msg.style.display = 'block';
+    msg.style.animation = 'none';
+    void msg.offsetWidth;
+    msg.style.animation = 'fadeSlide 0.6s ease forwards';
+    msg.textContent = surprises[idx % surprises.length];
+    idx++;
+
+    // Burst of hearts on click
+    for (let i = 0; i < 12; i++) setTimeout(spawnHeart, i * 60);
+  });
+</script>
+</body>
+</html>
