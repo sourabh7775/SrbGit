@@ -1,284 +1,295 @@
-// ─── Player Car ──────────────────────────────────────────────────────────────
+// ─── Player Car ───────────────────────────────────────────────────────────────
 
 class Car {
-  constructor(scene, color = 0xff2d78, isPlayer = true) {
+  constructor(scene, color = 0xff2d9e, isPlayer = true) {
     this.scene    = scene;
     this.color    = color;
     this.isPlayer = isPlayer;
 
-    // Physics state
-    this.pos   = new THREE.Vector3(0, 0.45, 8);
+    this.pos   = new THREE.Vector3(0, 0.5, 0);
     this.vel   = new THREE.Vector3();
-    this.angle = 0;           // radians — car heading (XZ plane)
-    this.speed = 0;           // signed m/s
+    this.angle = 0;
+    this.speed = 0;
     this.steer = 0;
     this.driftAngle = 0;
+    this.drifting = false;
 
-    // Nitro
-    this.nitro    = 1.0;      // 0..1
+    this.nitro    = 1.0;
     this.nitroOn  = false;
-    this.nitroRecharge = false;
+    this.nitroLocked = false;
 
-    // Lap tracking
-    this.lap           = 1;
-    this.waypointIdx   = 0;
-    this.lapStartTime  = 0;
-    this.lapTimes      = [];
-    this.bestLap       = Infinity;
-    this.raceFinished  = false;
-    this.lastCheckpoint = -1;
+    this.lap          = 1;
+    this.waypointIdx  = 0;
+    this.lapStartTime = 0;
+    this.lapTimes     = [];
+    this.bestLap      = Infinity;
+    this.raceFinished = false;
 
-    this._buildMesh();
-    this._buildWheels();
-    this._buildLights();
-    this._buildShadowBlob();
-
-    // Wheel rotation tracking
     this._wheelRot = 0;
+    this._buildMesh();
   }
 
-  /* ── Mesh ──────────────────────────────────────────────── */
+  /* ── Mesh: proper low-poly sports car ─────────────── */
   _buildMesh() {
     this.group = new THREE.Group();
     this.scene.add(this.group);
 
-    // Body
-    const bodyGeo = new THREE.BoxGeometry(2.2, 0.7, 4.5);
-    const bodyMat = new THREE.MeshLambertMaterial({ color: this.color });
-    this.body = new THREE.Mesh(bodyGeo, bodyMat);
-    this.body.position.y = 0.55;
-    this.body.castShadow = true;
-    this.group.add(this.body);
+    const mat = (c, em=0, ei=0) => new THREE.MeshLambertMaterial({
+      color:c, emissive:em, emissiveIntensity:ei,
+    });
 
-    // Cockpit / cabin
-    const cabinGeo = new THREE.BoxGeometry(1.6, 0.55, 2.0);
-    const cabinMat = new THREE.MeshLambertMaterial({ color: 0x111122 });
-    const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-    cabin.position.set(0, 1.05, -0.2);
-    cabin.castShadow = true;
-    this.group.add(cabin);
+    // ── Lower body (wide, flat) ──
+    const lbGeo = new THREE.BufferGeometry();
+    // 8 vertices for a wedge: wide at rear, slightly narrower at front
+    const lbV = new Float32Array([
+      // bottom
+      -1.1,0,-2.2,  1.1,0,-2.2,  1.2,0,1.8,  -1.2,0,1.8,
+      // top
+      -1.0,.5,-2.1,  1.0,.5,-2.1,  1.15,.45,1.7,  -1.15,.45,1.7,
+    ]);
+    const lbI = [
+      0,1,5, 0,5,4,   // front
+      2,3,7, 2,7,6,   // rear
+      0,3,7, 0,7,4,   // left
+      1,2,6, 1,6,5,   // right
+      4,5,6, 4,6,7,   // top
+      0,1,2, 0,2,3,   // bottom
+    ];
+    lbGeo.setAttribute('position',new THREE.Float32BufferAttribute(lbV,3));
+    lbGeo.setIndex(lbI); lbGeo.computeVertexNormals();
+    const lb = new THREE.Mesh(lbGeo, mat(this.color));
+    lb.castShadow = true; this.group.add(lb);
 
-    // Windshield tint
-    const windshieldGeo = new THREE.BoxGeometry(1.55, 0.45, 0.08);
-    const windshieldMat = new THREE.MeshLambertMaterial({ color: 0x112244, transparent: true, opacity: 0.7 });
-    const windshield = new THREE.Mesh(windshieldGeo, windshieldMat);
-    windshield.position.set(0, 1.08, 0.72);
-    this.group.add(windshield);
-
-    // Spoiler
-    const spoilerGeo = new THREE.BoxGeometry(2.4, 0.12, 0.5);
-    const spoilerMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
-    const spoiler = new THREE.Mesh(spoilerGeo, spoilerMat);
-    spoiler.position.set(0, 1.2, -2.3);
-    spoiler.castShadow = true;
-    this.group.add(spoiler);
-
-    // Spoiler pillars
-    for (const x of [-0.85, 0.85]) {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), spoilerMat);
-      pillar.position.set(x, 0.95, -2.3);
-      this.group.add(pillar);
+    // ── Sidepods / wide body kit ──
+    for(const x of [-1.32, 1.32]){
+      const pod = new THREE.Mesh(new THREE.BoxGeometry(.3,.3,2.8), mat(0x111111));
+      pod.position.set(x,.25,-.2);
+      this.group.add(pod);
     }
 
-    // Front diffuser
-    const diffGeo = new THREE.BoxGeometry(2.0, 0.18, 0.6);
-    const diffMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-    const diffuser = new THREE.Mesh(diffGeo, diffMat);
-    diffuser.position.set(0, 0.3, 2.35);
-    this.group.add(diffuser);
+    // ── Cockpit / cabin (tapered roof) ──
+    const cabinGeo = new THREE.BufferGeometry();
+    const cabV = new Float32Array([
+      -0.75,.5,-.8,  0.75,.5,-.8,  0.75,.5,.8,  -0.75,.5,.8,  // bottom
+      -0.45,1.1,-.5,  0.45,1.1,-.5,  0.45,1.1,.5,  -0.45,1.1,.5, // top
+    ]);
+    cabinGeo.setAttribute('position',new THREE.Float32BufferAttribute(cabV,3));
+    cabinGeo.setIndex([0,1,5,0,5,4, 2,3,7,2,7,6, 0,3,7,0,7,4, 1,2,6,1,6,5, 4,5,6,4,6,7, 0,1,2,0,2,3]);
+    cabinGeo.computeVertexNormals();
+    const cabin = new THREE.Mesh(cabinGeo, mat(0x080814));
+    cabin.castShadow=true; this.group.add(cabin);
 
-    // Side skirts
-    for (const x of [-1.18, 1.18]) {
-      const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.25, 3.8), diffMat);
-      skirt.position.set(x, 0.3, 0);
-      this.group.add(skirt);
+    // Windshield
+    const ws = new THREE.Mesh(new THREE.PlaneGeometry(1.3,.7),
+      new THREE.MeshLambertMaterial({color:0x1133aa,transparent:true,opacity:.55,side:THREE.DoubleSide}));
+    ws.position.set(0,.82,.81); ws.rotation.x=-.35;
+    this.group.add(ws);
+
+    // ── Front splitter ──
+    const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.4,.08,1.0), mat(0x111111));
+    splitter.position.set(0,.06,1.9); this.group.add(splitter);
+
+    // ── Rear wing ──
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(2.5,.1,.7), mat(0x111111));
+    wing.position.set(0,1.0,-2.1); this.group.add(wing);
+    for(const x of [-.9,.9]){
+      const pylon = new THREE.Mesh(new THREE.BoxGeometry(.12,.6,.1), mat(0x111111));
+      pylon.position.set(x,.7,-2.1); this.group.add(pylon);
     }
 
-    // Exhaust pipes
-    this.exhaustL = new THREE.Group();
-    this.exhaustR = new THREE.Group();
-    for (const [g, x] of [[this.exhaustL, -0.55], [this.exhaustR, 0.55]]) {
-      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.4, 8), new THREE.MeshLambertMaterial({ color: 0x888888 }));
-      pipe.rotation.x = Math.PI/2;
-      pipe.position.set(x, 0.4, -2.35);
-      g.add(pipe);
-      this.group.add(g);
-    }
-  }
+    // ── Underglow (neon emissive strip) ──
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(2.1,.05,4.2),
+      mat(this.color, this.color, 1.2));
+    glow.position.set(0,.02,0);
+    this.group.add(glow);
 
-  _buildWheels() {
+    // ── Wheels ──
     this.wheels = [];
-    const wheelGeo  = new THREE.CylinderGeometry(0.4, 0.4, 0.35, 14);
-    const tireMat   = new THREE.MeshLambertMaterial({ color: 0x111111 });
-    const rimMat    = new THREE.MeshLambertMaterial({ color: 0xcccccc });
-    const rimGeo    = new THREE.CylinderGeometry(0.22, 0.22, 0.36, 8);
-
-    const positions = [[-1.25, 0.4, 1.5], [1.25, 0.4, 1.5], [-1.25, 0.4, -1.6], [1.25, 0.4, -1.6]];
-    for (const [x, y, z] of positions) {
+    this.steerGroups = [];
+    const tireMat  = mat(0x111111);
+    const rimMat   = mat(0xbbbbbb, this.color, 0.4);
+    const brakeMat = mat(this.color, this.color, 0.8);
+    const wPositions = [[-1.25,.38,1.5],[1.25,.38,1.5],[-1.25,.38,-1.65],[1.25,.38,-1.65]];
+    for(let i=0;i<4;i++){
+      const [x,y,z] = wPositions[i];
+      const sg = new THREE.Group();
       const wg = new THREE.Group();
-      const tire = new THREE.Mesh(wheelGeo, tireMat);
-      tire.rotation.z = Math.PI/2;
-      tire.castShadow = true;
-      const rim = new THREE.Mesh(rimGeo, rimMat);
+      const tire = new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.32,16), tireMat);
+      tire.rotation.z = Math.PI/2; tire.castShadow=true;
+      // Rim
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.33,8), rimMat);
       rim.rotation.z = Math.PI/2;
-      wg.add(tire); wg.add(rim);
-      wg.position.set(x, y, z);
+      // Brake disc
+      const brake = new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.05,8), brakeMat);
+      brake.rotation.z = Math.PI/2; brake.position.x = x>0 ? -.18 : .18;
+      wg.add(tire); wg.add(rim); wg.add(brake);
+      sg.add(wg);
+      sg.position.set(x,y,z);
       this.wheels.push(wg);
-      this.group.add(wg);
+      this.steerGroups.push(sg);
+      this.group.add(sg);
     }
+
+    // ── Headlights ──
+    const hlMat = new THREE.MeshBasicMaterial({color:0xffffff});
+    const tlMat = new THREE.MeshBasicMaterial({color:0xff1100, blending:THREE.AdditiveBlending});
+    for(const x of [-.6,.6]){
+      const hl=new THREE.Mesh(new THREE.BoxGeometry(.35,.14,.05),hlMat);
+      hl.position.set(x,.45,2.2); this.group.add(hl);
+      const tl=new THREE.Mesh(new THREE.BoxGeometry(.3,.12,.05),tlMat);
+      tl.position.set(x,.5,-2.22); this.group.add(tl);
+    }
+
+    // ── Exhaust glow ──
+    this.exhaustL = new THREE.Mesh(new THREE.CylinderGeometry(.08,.1,.3,8),
+      mat(0x888888)); this.exhaustL.rotation.x=Math.PI/2;
+    this.exhaustL.position.set(-.5,.35,-2.22); this.group.add(this.exhaustL);
+    this.exhaustR = this.exhaustL.clone();
+    this.exhaustR.position.set(.5,.35,-2.22); this.group.add(this.exhaustR);
   }
 
-  _buildLights() {
-    // Headlights
-    const hlMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    for (const x of [-0.65, 0.65]) {
-      const hl = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.18, 0.08), hlMat);
-      hl.position.set(x, 0.62, 2.27);
-      this.group.add(hl);
-    }
-    // Taillights
-    const tlMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
-    for (const x of [-0.7, 0.7]) {
-      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.08), tlMat);
-      tl.position.set(x, 0.62, -2.27);
-      this.group.add(tl);
-    }
-
-    // Point light for headlights (player only)
-    if (this.isPlayer) {
-      this.headLight = new THREE.SpotLight(0xffffff, 1.5, 80, Math.PI/6, 0.5);
-      this.headLight.position.set(0, 2, 3);
-      this.headLight.target.position.set(0, 0, 20);
-      this.group.add(this.headLight);
-      this.group.add(this.headLight.target);
-    }
-  }
-
-  _buildShadowBlob() {
-    const geo = new THREE.PlaneGeometry(3.5, 5.5);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35 });
-    this.shadowBlob = new THREE.Mesh(geo, mat);
-    this.shadowBlob.rotation.x = -Math.PI/2;
-    this.shadowBlob.position.y = 0.01;
-    this.group.add(this.shadowBlob);
-  }
-
-  /* ── Update ────────────────────────────────────────────── */
-  update(dt, input, waypoints) {
-    const MAX_SPEED    = 42;
-    const ACCEL        = 28;
-    const BRAKE_FORCE  = 40;
-    const FRICTION     = 12;
-    const STEER_SPEED  = 2.8;
-    const NITRO_BOOST  = 18;
+  /* ── Physics update ───────────────────────────────── */
+  update(dt, input, trackData) {
+    const ACCEL     = 38;
+    const BRAKE     = 50;
+    const FRICTION  = 14;
+    const MAX_SPEED = 52;
+    const NITRO_ADD = 22;
+    const STEER_MAX = 3.0;
 
     // Nitro
-    if (input.nitro && this.nitro > 0 && !this.nitroRecharge) {
+    if (input.nitro && this.nitro > 0 && !this.nitroLocked) {
       this.nitroOn = true;
-      this.nitro = Math.max(0, this.nitro - dt * 0.55);
-      if (this.nitro === 0) this.nitroRecharge = true;
+      this.nitro = Math.max(0, this.nitro - dt * 0.5);
+      if (this.nitro === 0) this.nitroLocked = true;
     } else {
       this.nitroOn = false;
     }
-    if (this.nitroRecharge) {
-      this.nitro = Math.min(1, this.nitro + dt * 0.18);
-      if (this.nitro >= 1) this.nitroRecharge = false;
-    } else if (!input.nitro) {
-      this.nitro = Math.min(1, this.nitro + dt * 0.12);
+    if (this.nitroLocked) {
+      this.nitro = Math.min(1, this.nitro + dt * 0.15);
+      if (this.nitro >= 1) this.nitroLocked = false;
+    } else if (!this.nitroOn) {
+      this.nitro = Math.min(1, this.nitro + dt * 0.08);
     }
 
-    const topSpeed = MAX_SPEED + (this.nitroOn ? NITRO_BOOST : 0);
+    const topSpeed = MAX_SPEED + (this.nitroOn ? NITRO_ADD : 0);
 
-    // Acceleration / braking
-    if (input.throttle) {
-      this.speed += ACCEL * dt;
-    } else if (input.brake) {
-      if (this.speed > 0) this.speed -= BRAKE_FORCE * dt;
-      else                 this.speed -= ACCEL * 0.5 * dt;
+    // Throttle / brake
+    if (input.throttle)      this.speed += ACCEL * dt;
+    else if (input.brake) {
+      if (this.speed > 1)    this.speed -= BRAKE * dt;
+      else                   this.speed -= ACCEL * 0.4 * dt;
     } else {
-      if (this.speed > 0) this.speed -= FRICTION * dt;
-      else if (this.speed < 0) this.speed += FRICTION * dt;
+      this.speed -= Math.sign(this.speed) * FRICTION * dt;
+      if (Math.abs(this.speed) < 0.1) this.speed = 0;
     }
+    this.speed = Math.max(-14, Math.min(topSpeed, this.speed));
 
-    this.speed = Math.max(-12, Math.min(topSpeed, this.speed));
-    if (Math.abs(this.speed) < 0.05) this.speed = 0;
+    // Steering — tighter at high speed
+    const rawSteer = input.steerLeft ? -1 : input.steerRight ? 1 : 0;
+    const steerRate = 5.5 / (1 + Math.abs(this.speed) * 0.04);
+    this.steer += (rawSteer - this.steer) * Math.min(1, dt * steerRate);
 
-    // Boost strip check
-    if (waypoints) this._checkBoostStrips(waypoints);
-
-    // Steering
     if (Math.abs(this.speed) > 0.5) {
-      const steerFactor = 1 - Math.abs(this.speed) / (topSpeed * 1.6);
-      const targetSteer = (input.steerLeft ? -1 : input.steerRight ? 1 : 0);
-      this.steer += (targetSteer - this.steer) * Math.min(1, dt * 8);
-      this.angle += this.steer * STEER_SPEED * steerFactor * dt * Math.sign(this.speed);
-    } else {
-      this.steer *= 0.9;
+      const steerEffect = STEER_MAX * (1 - Math.abs(this.speed) / (topSpeed * 2.2));
+      this.angle += this.steer * steerEffect * dt * Math.sign(this.speed);
     }
 
     // Drift
-    if (Math.abs(this.speed) > 15 && Math.abs(this.steer) > 0.5) {
-      this.driftAngle += (this.steer * 0.15 - this.driftAngle) * dt * 4;
+    const driftThreshold = 0.55;
+    this.drifting = Math.abs(this.steer) > driftThreshold && Math.abs(this.speed) > 18;
+    if (this.drifting) {
+      this.driftAngle += (this.steer * 0.18 - this.driftAngle) * dt * 5;
+      // Nitro recharge while drifting
+      if (!this.nitroLocked) this.nitro = Math.min(1, this.nitro + dt * 0.25);
     } else {
-      this.driftAngle *= (1 - dt * 5);
+      this.driftAngle *= (1 - dt * 8);
     }
 
-    // Move
-    const heading = this.angle + this.driftAngle * 0.3;
+    // Position
+    const heading = this.angle + this.driftAngle * 0.28;
     this.pos.x += Math.sin(heading) * this.speed * dt;
     this.pos.z += Math.cos(heading) * this.speed * dt;
+    this.pos.y = 0.5;
+
+    // Boost pads
+    if (trackData) this._checkBoostStrips(trackData);
+
+    // Wall collision
+    if (trackData) this._wallCollision(trackData);
 
     // Apply to group
     this.group.position.copy(this.pos);
     this.group.rotation.y = this.angle;
 
-    // Wheel rotation
-    this._wheelRot += this.speed * dt * 1.5;
+    // Wheel animation
+    this._wheelRot += this.speed * dt * 1.8;
     for (let i = 0; i < 4; i++) {
-      this.wheels[i].children[0].rotation.x = this._wheelRot;
-      this.wheels[i].children[1].rotation.x = this._wheelRot;
+      this.wheels[i].rotation.x = this._wheelRot;
+      if (i < 2) this.steerGroups[i].rotation.y = this.steer * 0.4;
     }
-    // Front wheel steering
-    this.wheels[0].rotation.y = this.steer * 0.45;
-    this.wheels[1].rotation.y = this.steer * 0.45;
 
-    // Chassis tilt
-    this.body.rotation.x = -this.speed * 0.006;
-    this.body.rotation.z = -this.steer * this.speed * 0.008;
+    // Body tilt
+    this.group.children[0].rotation.z = -this.steer * this.speed * 0.007;
+    this.group.children[0].rotation.x = -this.speed * 0.005;
 
-    // Waypoint progression
-    if (waypoints) this._progressWaypoints(waypoints);
+    // Waypoint progress
+    if (trackData) this._progressWaypoints(trackData);
   }
 
-  _checkBoostStrips(trackData) {
-    if (!trackData.boostStrips) return;
-    for (const s of trackData.boostStrips) {
+  _checkBoostStrips(td) {
+    for (const s of td.boostStrips) {
       const dx = this.pos.x - s.x, dz = this.pos.z - s.z;
-      if (Math.sqrt(dx*dx+dz*dz) < 6) {
-        this.speed = Math.min(this.speed + 8, 55);
+      if (dx*dx + dz*dz < 64) {
+        if (this.speed < 60) { this.speed = Math.min(60, this.speed + 12); AudioEngine.playBoostHit(); }
         break;
       }
     }
   }
 
-  _progressWaypoints(trackData) {
-    const wps = trackData.waypoints;
-    const next = wps[(this.waypointIdx + 1) % wps.length];
-    const dx = this.pos.x - next.x, dz = this.pos.z - next.z;
-    if (Math.sqrt(dx*dx+dz*dz) < 14) {
-      this.waypointIdx = (this.waypointIdx + 1) % wps.length;
-      if (this.waypointIdx === 0) {
-        this._completeLap();
-      }
+  _wallCollision(td) {
+    const wps = td.waypoints;
+    const N   = wps.length;
+    // Find closest waypoint
+    let minD = Infinity, minI = this.waypointIdx;
+    for (let off = -4; off <= 4; off++) {
+      const i = (this.waypointIdx + off + N) % N;
+      const dx = this.pos.x - wps[i].x, dz = this.pos.z - wps[i].z;
+      const d = dx*dx + dz*dz;
+      if (d < minD) { minD = d; minI = i; }
+    }
+    const wp = wps[minI];
+    // Lateral offset from track center
+    const dx = this.pos.x - wp.x, dz = this.pos.z - wp.z;
+    const lateral = dx * wp.nx + dz * wp.nz;
+    if (Math.abs(lateral) > td.TW - 1.2) {
+      // Push car back inside + damp speed
+      const push = (Math.abs(lateral) - (td.TW - 1.2)) * Math.sign(lateral);
+      this.pos.x -= wp.nx * push;
+      this.pos.z -= wp.nz * push;
+      this.speed *= 0.55;
+      this.steer = 0;
     }
   }
 
-  _completeLap() {
+  _progressWaypoints(td) {
+    const wps = td.waypoints;
+    const N   = wps.length;
+    const next = wps[(this.waypointIdx + 1) % N];
+    const dx = this.pos.x - next.x, dz = this.pos.z - next.z;
+    if (dx*dx + dz*dz < 180) {
+      this.waypointIdx = (this.waypointIdx + 1) % N;
+      if (this.waypointIdx === 0) this._finishLap();
+    }
+  }
+
+  _finishLap() {
     const now = performance.now();
     if (this.lapStartTime > 0) {
-      const lapTime = now - this.lapStartTime;
-      this.lapTimes.push(lapTime);
-      if (lapTime < this.bestLap) this.bestLap = lapTime;
+      const t = now - this.lapStartTime;
+      this.lapTimes.push(t);
+      if (t < this.bestLap) this.bestLap = t;
+      if (this.isPlayer) AudioEngine.playLapDing();
     }
     this.lapStartTime = now;
     if (this.lap < 3) this.lap++;
@@ -289,25 +300,16 @@ class Car {
 
   getGear() {
     const s = Math.abs(this.speed);
-    if (s < 8)  return 1;
-    if (s < 16) return 2;
-    if (s < 24) return 3;
-    if (s < 32) return 4;
-    if (s < 40) return 5;
-    return 6;
+    return s<8?1:s<17?2:s<26?3:s<35?4:s<44?5:6;
   }
 
-  reset(pos, angle) {
-    this.pos.set(pos.x, 0.45, pos.z);
-    this.angle    = angle || 0;
-    this.speed    = 0;
-    this.steer    = 0;
-    this.driftAngle = 0;
+  reset(wp, wpNext) {
+    const ang = Math.atan2(wpNext.x - wp.x, wpNext.z - wp.z);
+    this.pos.set(wp.x, 0.5, wp.z);
+    this.angle = ang; this.speed = 0; this.steer = 0; this.driftAngle = 0;
     this.group.position.copy(this.pos);
-    this.group.rotation.y = this.angle;
+    this.group.rotation.y = ang;
   }
 
-  dispose() {
-    this.scene.remove(this.group);
-  }
+  dispose() { this.scene.remove(this.group); }
 }

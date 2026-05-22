@@ -1,75 +1,67 @@
 // ─── AI Opponents ─────────────────────────────────────────────────────────────
 
 class AICar extends Car {
-  constructor(scene, color, offset = 0) {
+  constructor(scene, color, startOffset, difficultySpeed) {
     super(scene, color, false);
-    this.offset    = offset;   // waypoint start offset
-    this.aiSpeed   = 22 + Math.random() * 10;
-    this.skillJitter = (Math.random() - 0.5) * 0.3;
-    this.targetWP  = offset;
-    this.waypointIdx = offset;
-    this.lap = 1;
+    this.waypointIdx = startOffset;
+    this.targetWP    = startOffset;
+    this.aiTopSpeed  = difficultySpeed;
+    this._jitter     = (Math.random() - 0.5) * 0.25;
   }
 
   updateAI(dt, trackData) {
-    if (!trackData) return;
-    const wps  = trackData.waypoints;
-    const N    = wps.length;
-    const next = wps[this.targetWP % N];
+    const wps = trackData.waypoints;
+    const N   = wps.length;
+    // Look 3 waypoints ahead for smoother path
+    const lookAhead = wps[(this.targetWP + 3) % N];
 
-    const dx = next.x - this.pos.x;
-    const dz = next.z - this.pos.z;
-    const dist = Math.sqrt(dx*dx+dz*dz);
+    const dx = lookAhead.x - this.pos.x;
+    const dz = lookAhead.z - this.pos.z;
+    const dist = Math.sqrt(dx*dx + dz*dz);
 
-    // Desired angle
     const desired = Math.atan2(dx, dz);
     let diff = desired - this.angle;
     while (diff >  Math.PI) diff -= 2*Math.PI;
     while (diff < -Math.PI) diff += 2*Math.PI;
-    this.angle += diff * Math.min(1, dt * 3.5);
+    this.angle += diff * Math.min(1, dt * 4);
 
-    // Advance waypoint
-    if (dist < 12) {
+    if (dist < 16) {
       this.targetWP = (this.targetWP + 1) % N;
       this.waypointIdx = this.targetWP;
-      if (this.targetWP === 0 || this.targetWP === this.offset % N) {
+      if (this.targetWP === 0) {
         if (this.lap < 3) this.lap++;
         else this.raceFinished = true;
       }
     }
 
-    // Speed control
-    const cornerFactor = Math.abs(diff) > 0.4 ? 0.7 : 1.0;
-    const target = this.aiSpeed * cornerFactor;
-    this.speed += (target - this.speed) * dt * 2;
+    // Speed — slow in tight corners
+    const cornerSlow = Math.abs(diff) > 0.5 ? 0.72 : 1.0;
+    const target = this.aiTopSpeed * cornerSlow + this._jitter * 3;
+    this.speed += (target - this.speed) * dt * 2.5;
 
-    // Drift angle (cosmetic)
-    this.driftAngle = diff * 0.08 + this.skillJitter;
+    this.drifting = Math.abs(diff) > 0.4 && this.speed > 15;
+    this.driftAngle = diff * 0.07;
 
-    const heading = this.angle;
-    this.pos.x += Math.sin(heading) * this.speed * dt;
-    this.pos.z += Math.cos(heading) * this.speed * dt;
-    this.pos.y = 0.45;
+    this.pos.x += Math.sin(this.angle) * this.speed * dt;
+    this.pos.z += Math.cos(this.angle) * this.speed * dt;
+    this.pos.y  = 0.5;
+
+    if (trackData) this._wallCollision(trackData);
 
     this.group.position.copy(this.pos);
     this.group.rotation.y = this.angle;
 
-    this._wheelRot += this.speed * dt * 1.5;
-    for (let i = 0; i < 4; i++) {
-      this.wheels[i].children[0].rotation.x = this._wheelRot;
-      this.wheels[i].children[1].rotation.x = this._wheelRot;
-    }
-
-    this.body.rotation.z = -diff * this.speed * 0.006;
-    this.body.rotation.x = -this.speed * 0.005;
+    this._wheelRot += this.speed * dt * 1.8;
+    for (let i = 0; i < 4; i++) this.wheels[i].rotation.x = this._wheelRot;
+    this.group.children[0].rotation.z = -diff * this.speed * 0.006;
+    this.group.children[0].rotation.x = -this.speed * 0.004;
   }
-
-  getSpeedKmh() { return Math.abs(this.speed) * 3.6; }
 }
 
-// Build 3 AI opponents with staggered start positions
 function createAIOpponents(scene) {
-  const colors  = [0x39ff14, 0xffe600, 0xff8800];
-  const offsets = [8, 16, 24];
-  return colors.map((c, i) => new AICar(scene, c, offsets[i]));
+  return [
+    new AICar(scene, 0x39ff14, 8,  28),
+    new AICar(scene, 0xffe600, 16, 25),
+    new AICar(scene, 0xff6600, 24, 22),
+  ];
 }

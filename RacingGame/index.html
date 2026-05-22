@@ -1,131 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TURBO RUSH — macOS Racing</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8"/>
+  <title>NEON RUSH — Synthwave Racer</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
-<!-- ───────────────── MENU SCREEN ───────────────── -->
-<div id="menu-screen" class="screen active">
-  <div class="menu-bg">
-    <canvas id="menu-canvas"></canvas>
-  </div>
-  <div class="menu-content">
-    <div class="logo">
-      <span class="logo-turbo">TURBO</span>
-      <span class="logo-rush">RUSH</span>
+<!-- ═══════════ MENU ═══════════ -->
+<div id="screen-menu" class="screen active">
+  <canvas id="menu-bg"></canvas>
+  <div class="menu-ui">
+    <div class="logo-wrap">
+      <div class="logo-line1">NEON</div>
+      <div class="logo-line2">RUSH</div>
+      <div class="logo-sub">SYNTHWAVE RACER</div>
     </div>
-    <p class="tagline">The Ultimate macOS Racing Experience</p>
-    <div class="menu-buttons">
-      <button class="btn-primary" onclick="Game.startRace()">RACE NOW</button>
-      <button class="btn-secondary" onclick="showScreen('controls-screen')">CONTROLS</button>
+    <div class="menu-actions">
+      <button class="btn-play" onclick="NeonRush.start()">▶  START RACE</button>
+      <button class="btn-info" onclick="showScreen('screen-how')">CONTROLS</button>
     </div>
-    <div class="menu-stats">
-      <div class="stat-item"><span class="stat-label">BEST LAP</span><span class="stat-val" id="menu-best-lap">--:--</span></div>
-      <div class="stat-item"><span class="stat-label">TOP SPEED</span><span class="stat-val" id="menu-top-speed">0 km/h</span></div>
+    <div class="menu-records">
+      <div class="rec-item">BEST LAP <span id="rec-lap">--:--.---</span></div>
+      <div class="rec-item">TOP SPEED <span id="rec-speed">0 km/h</span></div>
     </div>
   </div>
 </div>
 
-<!-- ───────────────── CONTROLS SCREEN ───────────────── -->
-<div id="controls-screen" class="screen">
-  <div class="controls-panel">
-    <h2>CONTROLS</h2>
-    <div class="controls-grid">
-      <div class="ctrl-row"><kbd>W</kbd> / <kbd>↑</kbd> <span>Accelerate</span></div>
-      <div class="ctrl-row"><kbd>S</kbd> / <kbd>↓</kbd> <span>Brake / Reverse</span></div>
-      <div class="ctrl-row"><kbd>A</kbd> / <kbd>←</kbd> <span>Steer Left</span></div>
-      <div class="ctrl-row"><kbd>D</kbd> / <kbd>→</kbd> <span>Steer Right</span></div>
-      <div class="ctrl-row"><kbd>Space</kbd> <span>Nitro Boost</span></div>
-      <div class="ctrl-row"><kbd>C</kbd> <span>Cycle Camera</span></div>
-      <div class="ctrl-row"><kbd>R</kbd> <span>Reset Car</span></div>
-      <div class="ctrl-row"><kbd>Esc</kbd> <span>Pause</span></div>
+<!-- ═══════════ HOW TO PLAY ═══════════ -->
+<div id="screen-how" class="screen">
+  <div class="how-panel">
+    <h2>HOW TO PLAY</h2>
+    <div class="how-grid">
+      <div class="how-row"><span class="key-group"><kbd>W</kbd><kbd>↑</kbd></span><span>Accelerate</span></div>
+      <div class="how-row"><span class="key-group"><kbd>S</kbd><kbd>↓</kbd></span><span>Brake / Reverse</span></div>
+      <div class="how-row"><span class="key-group"><kbd>A</kbd><kbd>←</kbd></span><span>Steer Left</span></div>
+      <div class="how-row"><span class="key-group"><kbd>D</kbd><kbd>→</kbd></span><span>Steer Right</span></div>
+      <div class="how-row"><kbd>SPACE</kbd><span>NITRO BOOST</span></div>
+      <div class="how-row"><kbd>C</kbd><span>Camera Mode</span></div>
+      <div class="how-row"><kbd>R</kbd><span>Reset Car</span></div>
+      <div class="how-row"><kbd>Esc</kbd><span>Pause</span></div>
     </div>
-    <button class="btn-secondary" onclick="showScreen('menu-screen')">BACK</button>
+    <div class="how-tips">
+      <p>💡 Hit the <span class="c-cyan">cyan boost pads</span> for instant speed</p>
+      <p>💡 Drift corners to fill your <span class="c-pink">NITRO</span> meter faster</p>
+      <p>💡 Press <span class="c-yellow">C</span> to cycle 5 camera views</p>
+    </div>
+    <button class="btn-info" onclick="showScreen('screen-menu')">BACK</button>
   </div>
 </div>
 
-<!-- ───────────────── GAME SCREEN ───────────────── -->
-<div id="game-screen" class="screen">
+<!-- ═══════════ GAME ═══════════ -->
+<div id="screen-game" class="screen">
   <canvas id="game-canvas"></canvas>
+
+  <!-- overlay effects -->
+  <div id="fx-vignette"></div>
+  <div id="fx-scanlines"></div>
+  <div id="fx-nitro-blur"></div>
+  <div id="fx-speedlines"></div>
 
   <!-- HUD -->
   <div id="hud">
-    <!-- Speed -->
-    <div id="hud-speed-panel">
-      <canvas id="speedometer" width="160" height="160"></canvas>
-      <div id="gear-display">1</div>
-    </div>
 
-    <!-- Top bar -->
-    <div id="hud-top">
-      <div id="hud-position">P<span id="pos-num">1</span></div>
-      <div id="hud-center">
-        <div id="hud-lap">LAP <span id="lap-num">1</span> / 3</div>
-        <div id="hud-timer" class="timer">0:00.000</div>
+    <div id="hud-bar-top">
+      <div id="h-pos">P<span id="h-pos-n">1</span></div>
+      <div id="h-mid">
+        <div id="h-lap-info">LAP <span id="h-lap">1</span>&nbsp;/&nbsp;3</div>
+        <div id="h-time">0:00.000</div>
+        <div id="h-bestlap">BEST &nbsp;<span id="h-bestlap-v">--:--.---</span></div>
       </div>
-      <div id="hud-best-lap">BEST <span id="best-lap-display">--:--</span></div>
+      <div id="h-cam-label">CHASE</div>
     </div>
 
-    <!-- Nitro bar -->
-    <div id="nitro-container">
-      <div class="nitro-label">NITRO</div>
-      <div id="nitro-bar-bg">
-        <div id="nitro-bar"></div>
-        <div class="nitro-segments"></div>
+    <!-- Drift score -->
+    <div id="drift-panel" class="hidden">
+      <div id="drift-label">DRIFT</div>
+      <div id="drift-score">0</div>
+      <div id="drift-multi">x1</div>
+    </div>
+
+    <!-- Lap times sidebar -->
+    <div id="h-laps"></div>
+
+    <!-- Bottom HUD -->
+    <div id="hud-bar-bottom">
+      <!-- Nitro -->
+      <div id="nitro-wrap">
+        <div class="nitro-label">NITRO</div>
+        <div id="nitro-track">
+          <div id="nitro-fill"></div>
+        </div>
       </div>
+      <!-- Speedo -->
+      <canvas id="speedo" width="180" height="180"></canvas>
+      <!-- Minimap -->
+      <canvas id="minimap" width="150" height="150"></canvas>
     </div>
 
-    <!-- Minimap -->
-    <div id="minimap-container">
-      <canvas id="minimap" width="140" height="140"></canvas>
-      <div id="minimap-label">MAP</div>
-    </div>
+  </div><!-- /hud -->
 
-    <!-- Camera mode -->
-    <div id="cam-mode-label">CHASE CAM</div>
+  <!-- Countdown -->
+  <div id="countdown"><span id="cd-text"></span></div>
 
-    <!-- Lap times -->
-    <div id="lap-times-panel"></div>
+  <!-- Pause -->
+  <div id="pause-overlay" class="hidden overlay-panel">
+    <h2>PAUSED</h2>
+    <button class="btn-play" onclick="NeonRush.resume()">RESUME</button>
+    <button class="btn-info" onclick="NeonRush.restart()">RESTART</button>
+    <button class="btn-info" onclick="NeonRush.toMenu()">MENU</button>
   </div>
 
-  <!-- Countdown overlay -->
-  <div id="countdown-overlay">
-    <div id="countdown-text"></div>
+  <!-- Finish -->
+  <div id="finish-overlay" class="hidden overlay-panel">
+    <div id="fin-trophy">🏆</div>
+    <div id="fin-title">RACE COMPLETE</div>
+    <div id="fin-pos"></div>
+    <div id="fin-rows"></div>
+    <button class="btn-play" onclick="NeonRush.restart()">RACE AGAIN</button>
+    <button class="btn-info" onclick="NeonRush.toMenu()">MENU</button>
   </div>
 
-  <!-- Nitro flash -->
-  <div id="nitro-flash"></div>
+</div><!-- /screen-game -->
 
-  <!-- Pause menu -->
-  <div id="pause-menu" class="hidden">
-    <div class="pause-panel">
-      <h2>PAUSED</h2>
-      <button class="btn-primary" onclick="Game.resume()">RESUME</button>
-      <button class="btn-secondary" onclick="Game.restart()">RESTART</button>
-      <button class="btn-secondary" onclick="Game.exitToMenu()">MAIN MENU</button>
-    </div>
-  </div>
-
-  <!-- Race finish overlay -->
-  <div id="finish-overlay" class="hidden">
-    <div class="finish-panel">
-      <div id="finish-title">RACE COMPLETE!</div>
-      <div id="finish-position"></div>
-      <div id="finish-time"></div>
-      <div id="finish-best"></div>
-      <div id="finish-laps"></div>
-      <button class="btn-primary" onclick="Game.restart()">RACE AGAIN</button>
-      <button class="btn-secondary" onclick="Game.exitToMenu()">MENU</button>
-    </div>
-  </div>
-</div>
-
-<!-- Three.js from CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/audio.js"></script>
 <script src="js/track.js"></script>
 <script src="js/car.js"></script>
 <script src="js/ai.js"></script>
