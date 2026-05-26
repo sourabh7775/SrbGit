@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>6 AM Without You</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Caveat:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Cormorant Garamond', serif;
+      background: #12101e;
+      color: #e8dff5;
+      overflow-x: hidden;
+    }
+
+    /* ══ SECTION 1 — NIGHT / SLEEPING ══ */
+    .night {
+      min-height: 100vh;
+      background: linear-gradient(170deg, #12101e 0%, #1c1630 55%, #241828 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Star field */
+    .stars { position: absolute; inset: 0; pointer-events: none; }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: white;
+      animation: twinkle ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: .15; transform: scale(.8); }
+      50%      { opacity: .9;  transform: scale(1.2); }
+    }
+
+    /* Soft moon glow at top */
+    .moon-glow {
+      position: absolute;
+      top: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(200,180,255,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .night-content {
+      position: relative;
+      z-index: 2;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .moon-emoji {
+      font-size: 2.8rem;
+      display: block;
+      margin-bottom: 16px;
+      animation: moonSway 6s ease-in-out infinite;
+      filter: drop-shadow(0 0 18px rgba(180,160,255,.4));
+    }
+    @keyframes moonSway {
+      0%,100% { transform: rotate(-8deg) scale(1); }
+      50%      { transform: rotate(8deg)  scale(1.06); }
+    }
+
+    .whisper {
+      font-family: 'Caveat', cursive;
+      font-size: .85rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(200,180,255,.4);
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .night-headline {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 700;
+      font-size: clamp(1.9rem, 7vw, 2.6rem);
+      color: #f0eaff;
+      line-height: 1.2;
+      margin-bottom: 28px;
+      text-shadow: 0 0 40px rgba(180,150,255,.25);
+    }
+
+    .night-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 0 auto 28px;
+      width: 80%;
+    }
+    .night-divider::before, .night-divider::after {
+      content:''; flex:1; height:1px;
+      background: rgba(180,150,255,.2);
+    }
+    .night-divider span { color: rgba(180,150,255,.35); font-size: .8rem; }
+
+    .night-text p {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+      line-height: 2;
+      color: rgba(230,215,255,.7);
+      margin-bottom: 16px;
+    }
+    .night-text em {
+      color: rgba(220,200,255,.95);
+      font-style: normal;
+    }
+
+    /* Sleeping pill badge */
+    .sleep-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+      padding: 8px 18px;
+      border: 1px solid rgba(180,150,255,.2);
+      border-radius: 50px;
+      font-family: 'Caveat', cursive;
+      font-size: .9rem;
+      color: rgba(200,180,255,.5);
+      letter-spacing: 1px;
+    }
+
+    /* ── Wave separator ── */
+    .wave-sep {
+      display: block;
+      width: 100%;
+      line-height: 0;
+      background: #12101e;
+    }
+    .wave-sep svg { display: block; }
+
+    /* ══ SECTION 2 — MORNING / ALONE ══ */
+    .morning {
+      background: linear-gradient(170deg, #fef5ee 0%, #fde8d8 50%, #f8ddd0 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Morning light rays */
+    .light-rays {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      pointer-events: none;
+    }
+    .ray {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 1px;
+      height: 55vh;
+      background: linear-gradient(to top, rgba(255,200,130,.18), transparent);
+      transform-origin: bottom center;
+      filter: blur(1.5px);
+    }
+
+    .morning-content {
+      position: relative;
+      z-index: 2;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .clock-badge {
+      display: inline-block;
+      font-family: 'Caveat', cursive;
+      font-size: 1.1rem;
+      color: rgba(160,70,30,.55);
+      letter-spacing: 2px;
+      margin-bottom: 14px;
+      padding: 6px 16px;
+      border: 1.5px solid rgba(180,80,30,.2);
+      border-radius: 50px;
+    }
+
+    .morning-headline {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 700;
+      font-size: clamp(1.9rem, 7vw, 2.5rem);
+      color: #2a1208;
+      line-height: 1.25;
+      margin-bottom: 28px;
+    }
+
+    .morning-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 0 auto 28px; width: 80%;
+    }
+    .morning-divider::before, .morning-divider::after {
+      content:''; flex:1; height:1px;
+      background: rgba(180,80,30,.18);
+    }
+    .morning-divider span { color: rgba(180,80,30,.3); font-size: .8rem; }
+
+    .morning-text p {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+      line-height: 2;
+      color: rgba(60,20,5,.72);
+      margin-bottom: 16px;
+    }
+    .morning-text em {
+      color: #b5341a;
+      font-style: normal;
+    }
+
+    /* Pillow illustration — CSS only */
+    .pillow-wrap {
+      margin: 28px auto;
+      display: flex;
+      justify-content: center;
+    }
+    .pillow {
+      width: 180px;
+      height: 90px;
+      background: linear-gradient(135deg, #fce8d8, #f5d5c0);
+      border-radius: 50%;
+      position: relative;
+      box-shadow:
+        inset 0 4px 16px rgba(180,100,60,.12),
+        0 8px 24px rgba(180,80,30,.12);
+    }
+    .pillow::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 65%; height: 35%;
+      border-radius: 50%;
+      background: rgba(255,255,255,.35);
+    }
+    .indent {
+      position: absolute;
+      top: 22px; right: 44px;
+      width: 44px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f0c8b0, #e8b898);
+      box-shadow: inset 0 3px 8px rgba(160,70,30,.18);
+    }
+    .pillow-label {
+      font-family: 'Caveat', cursive;
+      font-size: .8rem;
+      color: rgba(160,70,30,.45);
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* ══ CLOSING ══ */
+    .closing {
+      background: #12101e;
+      padding: 60px 24px 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .closing-inner { max-width: 380px; }
+
+    .closing-big {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1.2rem, 4.5vw, 1.55rem);
+      color: rgba(230,215,255,.85);
+      line-height: 1.7;
+      margin-bottom: 20px;
+      text-shadow: 0 0 30px rgba(180,150,255,.2);
+    }
+    .closing-small {
+      font-family: 'Caveat', cursive;
+      font-size: 1rem;
+      color: rgba(180,150,255,.45);
+      letter-spacing: 1.5px;
+    }
+    .heart-final {
+      font-size: 2.2rem;
+      display: block;
+      margin-top: 24px;
+      animation: heartFinal 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(180,150,255,.4));
+    }
+    @keyframes heartFinal {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.18); }
+    }
+
+    /* ── Scroll-triggered fade-ins ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .9s ease, transform .9s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* initial night content animation */
+    .night-content { animation: fadeUp 1s .3s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+<!-- ══ NIGHT / SLEEPING ══ -->
+<section class="night">
+  <div class="stars" id="stars"></div>
+  <div class="moon-glow"></div>
+
+  <div class="night-content">
+    <span class="moon-emoji">🌙</span>
+    <span class="whisper">✦ while you were sleeping</span>
+    <h1 class="night-headline">Honestly, you looked<br>so ridiculously cute.</h1>
+    <div class="night-divider"><span>✦</span></div>
+    <div class="night-text">
+      <p>
+        You had no idea I was watching.<br>
+        Completely peaceful. Completely still.
+        Like the whole world had just quietly agreed
+        to leave you alone for a while —
+        and honestly, <em>it made the right call.</em>
+      </p>
+      <p>
+        The way you slept — just so soft, so easy —
+        I don't think you know how sweet you look
+        when you're not trying to be anything at all.
+        <em>That's when you're the most beautiful.</em>
+      </p>
+      <p>
+        I could have stayed in that moment forever.
+        I think a part of me did.
+      </p>
+    </div>
+    <div class="sleep-badge">
+      <span>🤍</span>
+      <span>do not disturb — she's perfect</span>
+    </div>
+  </div>
+</section>
+
+<!-- Wave transition -->
+<div class="wave-sep">
+  <svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" width="100%" height="60">
+    <path d="M0,0 C70,60 140,0 210,40 C280,80 350,20 420,50 L420,60 L0,60 Z" fill="#fef5ee"/>
+  </svg>
+</div>
+
+<!-- ══ MORNING / ALONE ══ -->
+<section class="morning">
+  <div class="light-rays" id="rays"></div>
+
+  <div class="morning-content">
+    <div class="reveal">
+      <span class="clock-badge">☀ this morning</span>
+      <h2 class="morning-headline">Woke up and reached over —<br>you weren't there.</h2>
+      <div class="morning-divider"><span>✦</span></div>
+    </div>
+
+    <div class="reveal">
+      <div class="morning-text">
+        <p>
+          The room was exactly the same.
+          The ceiling hadn't moved. The light came in
+          the same way it always does.
+          <em>But everything felt a little wrong.</em>
+        </p>
+        <p>
+          I just lay there for a second — reaching,
+          half-expecting to find you still there.
+          <em>There was just empty space.</em>
+          And it was the worst kind of quiet.
+        </p>
+        <p>
+          I've had boring mornings before.
+          But this one had a different kind of boring —
+          the kind that only happens
+          when something <em>really good</em> was just there,
+          and now isn't.
+        </p>
+      </div>
+    </div>
+
+    <div class="reveal pillow-wrap">
+      <div>
+        <div class="pillow">
+          <div class="indent"></div>
+        </div>
+        <p class="pillow-label">your side 🤍</p>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="morning-text">
+        <p>
+          That little indent where you were —
+          <em>I don't know why that hit so hard.</em>
+          But it did.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Wave transition -->
+<div style="background:#fef5ee; line-height:0;">
+  <svg viewBox="0 0 420 60" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" width="100%" height="60">
+    <path d="M0,10 C70,60 140,0 210,30 C280,60 350,10 420,40 L420,60 L0,60 Z" fill="#12101e"/>
+  </svg>
+</div>
+
+<!-- ══ CLOSING ══ -->
+<section class="closing">
+  <div class="closing-inner reveal">
+    <p class="closing-big">
+      "You don't even have to be awake<br>
+      to be the best part of my day.<br>
+      Imagine what you do when you're <em style="color:rgba(220,190,255,.85)">trying.</em>"
+    </p>
+    <span class="closing-small">missing you from the moment I opened my eyes 🌙</span>
+    <span class="heart-final">💜</span>
+  </div>
+</section>
+
+<script>
+  /* Stars */
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 70; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() < .2 ? 3 : 1.5;
+    s.style.cssText = `
+      width:${sz}px; height:${sz}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      animation-duration:${2+Math.random()*4}s;
+      animation-delay:${Math.random()*5}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  /* Morning light rays */
+  const raysEl = document.getElementById('rays');
+  for (let i = 0; i < 10; i++) {
+    const r = document.createElement('div');
+    r.className = 'ray';
+    r.style.transform = `rotate(${-20 + i * 4}deg)`;
+    r.style.opacity = (.4 + Math.random() * .4).toFixed(2);
+    raysEl.appendChild(r);
+  }
+
+  /* Scroll reveal */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
