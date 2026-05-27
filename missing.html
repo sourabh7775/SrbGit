@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2:47 AM</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #08080f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ambient phone-screen glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 30%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px; height: 420px;
+      background: radial-gradient(ellipse, rgba(100,90,180,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Phone frame ── */
+    .phone {
+      width: 100%;
+      max-width: 360px;
+      background: #0e0e18;
+      border-radius: 36px;
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 30px 80px rgba(0,0,0,.8),
+        0 0 60px rgba(100,90,200,.06);
+      overflow: hidden;
+      position: relative;
+      animation: phoneIn 1s .2s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes phoneIn {
+      from { opacity:0; transform: translateY(30px) scale(.96); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    /* Notch */
+    .notch {
+      width: 100px; height: 26px;
+      background: #0e0e18;
+      border-radius: 0 0 18px 18px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Status bar */
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 22px 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem;
+      color: rgba(255,255,255,.4);
+      letter-spacing: .5px;
+    }
+    .statusbar .time-text { color: rgba(255,255,255,.7); font-size: .7rem; }
+    .statusbar .icons { display:flex; gap:5px; align-items:center; }
+    .bat {
+      width: 18px; height: 10px;
+      border: 1.2px solid rgba(255,255,255,.35);
+      border-radius: 2px;
+      position: relative;
+      display: flex; align-items: center;
+      padding: 1.5px;
+    }
+    .bat::after {
+      content:'';
+      position:absolute;
+      right:-4px; top:50%;
+      transform:translateY(-50%);
+      width:2.5px; height:5px;
+      background: rgba(255,255,255,.3);
+      border-radius: 0 1px 1px 0;
+    }
+    .bat-fill {
+      height: 100%;
+      width: 22%;
+      background: #ff453a;
+      border-radius: 1px;
+    }
+
+    /* App top bar */
+    .app-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 18px 6px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .app-bar .back {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem;
+      color: rgba(150,140,210,.6);
+      letter-spacing: 1px;
+    }
+    .app-bar .app-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem;
+      color: rgba(255,255,255,.25);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .draft-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .55rem;
+      color: rgba(255,180,60,.5);
+      letter-spacing: 1px;
+      border: 1px solid rgba(255,180,60,.2);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* Note content area */
+    .note-area {
+      padding: 22px 22px 28px;
+      min-height: 420px;
+    }
+
+    .note-time {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem;
+      color: rgba(255,255,255,.2);
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .note-to {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: 2px;
+      color: rgba(150,140,210,.45);
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    /* The actual message */
+    .note-body {
+      font-family: 'Caveat', cursive;
+      font-size: 1.15rem;
+      line-height: 1.85;
+      color: rgba(235,228,255,.8);
+    }
+
+    .note-body p { margin-bottom: 16px; }
+    .note-body p.space { margin-bottom: 24px; }
+    .note-body em {
+      color: rgba(200,185,255,.95);
+      font-style: normal;
+    }
+    .note-body .soft {
+      color: rgba(200,185,255,.45);
+      font-size: 1rem;
+    }
+
+    /* Blinking cursor */
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 1.1em;
+      background: rgba(150,140,210,.8);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Bottom action row */
+    .note-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 18px 6px;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+    .note-actions .words {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .55rem;
+      color: rgba(255,255,255,.15);
+      letter-spacing: 1px;
+    }
+    .send-btn {
+      background: none;
+      border: 1px solid rgba(150,140,210,.25);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .6rem;
+      letter-spacing: 1.5px;
+      color: rgba(150,140,210,.5);
+      cursor: pointer;
+      transition: all .25s;
+    }
+    .send-btn:hover {
+      border-color: rgba(150,140,210,.5);
+      color: rgba(200,190,255,.8);
+      background: rgba(150,140,210,.06);
+    }
+
+    /* Home indicator */
+    .home-bar {
+      width: 120px; height: 4px;
+      background: rgba(255,255,255,.12);
+      border-radius: 2px;
+      margin: 10px auto 14px;
+    }
+
+    /* ── Send response overlay ── */
+    .sent-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,8,15,.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s;
+      z-index: 100;
+      text-align: center;
+      padding: 32px;
+    }
+    .sent-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .sent-overlay .sent-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 16px;
+      animation: iconPop .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes iconPop { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
+    .sent-overlay p {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 1.2rem;
+      color: rgba(220,210,255,.8);
+      line-height: 1.8;
+      max-width: 300px;
+    }
+    .sent-overlay .close-hint {
+      margin-top: 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .6rem;
+      color: rgba(150,140,210,.35);
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- Status bar -->
+  <div class="statusbar">
+    <span class="time-text">2:47</span>
+    <div class="icons">
+      <span>●●●</span>
+      <div class="bat"><div class="bat-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- App bar -->
+  <div class="app-bar">
+    <span class="back">‹ Notes</span>
+    <span class="app-title">Unsent</span>
+    <span class="draft-badge">DRAFT</span>
+  </div>
+
+  <!-- Note -->
+  <div class="note-area">
+    <span class="note-time">TODAY &nbsp;·&nbsp; 2:47 AM</span>
+    <span class="note-to">TO: ADHYA &nbsp;·&nbsp; NOT SENDING THIS</span>
+
+    <div class="note-body">
+      <p>
+        I keep picking up my phone to text you something stupid.
+        Then I remember the hour and put it down.
+        Then pick it up again two minutes later.
+      </p>
+
+      <p class="space">
+        I don't even have anything to say.
+        That's the thing.
+        <em>I just want you to know you're being thought about.</em>
+        Constantly. The annoying kind of constantly.
+      </p>
+
+      <p>
+        You're in everything tonight.
+        The playlist I put on. The show I can't focus on.
+        The ceiling I keep staring at.
+      </p>
+
+      <p class="space">
+        <em>I miss your voice.</em>
+        I miss the dumb things you say.
+        I miss sitting next to you doing absolutely nothing
+        and it somehow being enough.
+      </p>
+
+      <p>
+        Missing someone is a weird thing.
+        It doesn't go away when you get busy —
+        it just <em>waits.</em>
+        Patiently. Persistently.
+        And there are a lot of quiet moments at 2:47 AM.
+      </p>
+
+      <p class="space soft">
+        Goodnight, wherever you are.<br>
+        I hope you're sleeping well.<br>
+        (I know you are. You always do. Lucky.)
+      </p>
+
+      <span class="cursor"></span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="note-actions">
+    <span class="words">247 words &nbsp;·&nbsp; unsent</span>
+    <button class="send-btn" id="sendBtn">send ↗</button>
+  </div>
+
+  <div class="home-bar"></div>
+</div>
+
+<!-- Sent overlay -->
+<div class="sent-overlay" id="sentOverlay">
+  <span class="sent-icon">🌙</span>
+  <p>some things are better felt than sent —<br>but she felt every word of this anyway.</p>
+  <span class="close-hint">TAP TO CLOSE</span>
+</div>
+
+<script>
+  document.getElementById('sendBtn').addEventListener('click', () => {
+    document.getElementById('sentOverlay').classList.add('show');
+  });
+  document.getElementById('sentOverlay').addEventListener('click', () => {
+    document.getElementById('sentOverlay').classList.remove('show');
+  });
+</script>
+</body>
+</html>
