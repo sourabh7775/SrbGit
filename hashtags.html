@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adhya & Sourabh — Wedding Hashtags</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Great+Vibes&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    body {
+      min-height:100vh;
+      background: #faf5ee;
+      font-family:'Cormorant Garamond',Georgia,serif;
+      display:flex; flex-direction:column; align-items:center;
+      padding: 50px 18px 70px;
+      position:relative; overflow-x:hidden;
+    }
+
+    /* ── Watermark pattern ── */
+    body::before {
+      content:'';
+      position:fixed; inset:0; pointer-events:none;
+      background-image:
+        radial-gradient(circle, rgba(180,120,60,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* ── Corner ornaments ── */
+    .corner {
+      position:fixed; width:90px; height:90px;
+      opacity:.18; pointer-events:none;
+    }
+    .corner svg { width:100%; height:100%; }
+    .corner.tl { top:0; left:0; }
+    .corner.tr { top:0; right:0; transform:scaleX(-1); }
+    .corner.bl { bottom:0; left:0; transform:scaleY(-1); }
+    .corner.br { bottom:0; right:0; transform:scale(-1); }
+
+    /* ── Page wrap ── */
+    .page { max-width:480px; width:100%; position:relative; z-index:2; }
+
+    /* ── Header ── */
+    .hdr { text-align:center; margin-bottom:32px; animation:fadeDown .8s .1s ease both; }
+
+    .hdr-date {
+      font-family:'Nunito',sans-serif;
+      font-size:.6rem; font-weight:700; letter-spacing:5px;
+      text-transform:uppercase; color:rgba(160,100,50,.45);
+      margin-bottom:10px; display:block;
+    }
+
+    .names {
+      font-family:'Great Vibes',cursive;
+      font-size:clamp(3rem,14vw,4.5rem);
+      color:#4a2a0a;
+      line-height:1.1;
+      text-shadow: 0 2px 20px rgba(180,120,40,.15);
+    }
+
+    .amp {
+      font-family:'Great Vibes',cursive;
+      font-size:clamp(2rem,9vw,3rem);
+      color:rgba(180,120,50,.55);
+    }
+
+    .hdr-sub {
+      font-family:'Cormorant Garamond',serif;
+      font-style:italic; font-size:1rem;
+      color:rgba(120,70,20,.5);
+      letter-spacing:2px; margin-top:8px;
+      display:block;
+    }
+
+    /* ── Gold ornament divider ── */
+    .ornament {
+      display:flex; align-items:center; gap:10px;
+      margin: 20px auto; width:80%;
+    }
+    .ornament::before,.ornament::after {
+      content:''; flex:1; height:1px;
+      background:linear-gradient(90deg,transparent,rgba(180,130,50,.4),transparent);
+    }
+    .ornament span {
+      font-size:1rem; color:rgba(180,130,50,.5);
+      letter-spacing:4px;
+    }
+
+    /* ── THE ONE big hashtag ── */
+    .main-tag-wrap {
+      text-align:center; margin-bottom:28px;
+      animation:fadeUp .9s .3s ease both;
+    }
+    .main-tag-label {
+      font-family:'Nunito',sans-serif;
+      font-size:.58rem; font-weight:700; letter-spacing:4px;
+      text-transform:uppercase; color:rgba(160,100,50,.4);
+      margin-bottom:8px; display:block;
+    }
+    .main-tag {
+      font-family:'Cormorant Garamond',serif;
+      font-weight:600;
+      font-size:clamp(1.5rem,7vw,2.1rem);
+      color:#4a2a0a;
+      background: linear-gradient(135deg, #8b5a00, #c9a84c, #8b5a00);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+      letter-spacing:1px;
+      cursor:pointer;
+      padding:14px 24px;
+      border:1.5px solid rgba(180,130,50,.3);
+      border-radius:4px;
+      display:inline-block;
+      position:relative;
+      transition:border-color .2s, box-shadow .2s;
+      background-size:200%;
+      animation: goldShimmer 4s linear infinite;
+    }
+    @keyframes goldShimmer { to { background-position:200% center; } }
+    .main-tag:hover { border-color:rgba(180,130,50,.6); box-shadow:0 4px 20px rgba(180,130,50,.15); }
+    .main-tag-hint {
+      font-family:'Nunito',sans-serif;
+      font-size:.62rem; color:rgba(160,100,50,.4);
+      margin-top:8px; display:block; letter-spacing:1px;
+    }
+
+    /* ── Hashtag grid ── */
+    .section-title {
+      font-family:'Nunito',sans-serif;
+      font-size:.58rem; font-weight:700; letter-spacing:4px;
+      text-transform:uppercase; color:rgba(160,100,50,.4);
+      margin-bottom:12px; display:block;
+    }
+
+    .tag-section { margin-bottom:24px; animation:fadeUp .8s ease both; }
+    .tag-section:nth-child(1){animation-delay:.5s}
+    .tag-section:nth-child(2){animation-delay:.65s}
+    .tag-section:nth-child(3){animation-delay:.8s}
+    .tag-section:nth-child(4){animation-delay:.95s}
+
+    .tag-grid { display:flex; flex-wrap:wrap; gap:8px; }
+
+    .tag {
+      font-family:'Cormorant Garamond',serif;
+      font-weight:600;
+      font-size:.95rem;
+      color:#5a3210;
+      padding:9px 15px;
+      border:1px solid rgba(180,130,50,.25);
+      border-radius:4px;
+      background:rgba(255,245,230,.7);
+      cursor:pointer;
+      transition:all .2s;
+      position:relative;
+      letter-spacing:.3px;
+      user-select:all;
+    }
+    .tag:hover {
+      background:#fff;
+      border-color:rgba(180,130,50,.5);
+      color:#4a2a0a;
+      box-shadow:0 3px 12px rgba(180,130,50,.12);
+      transform:translateY(-1px);
+    }
+    .tag:active { transform:scale(.97); }
+
+    /* category color accents */
+    .tag.pink    { border-color:rgba(200,120,130,.3); background:rgba(255,240,242,.7); color:#6a2535; }
+    .tag.pink:hover { border-color:rgba(200,120,130,.6); box-shadow:0 3px 12px rgba(200,120,130,.12); }
+    .tag.green   { border-color:rgba(80,140,90,.25); background:rgba(240,248,240,.7); color:#2a4a2a; }
+    .tag.green:hover { border-color:rgba(80,140,90,.5); }
+    .tag.blue    { border-color:rgba(90,120,180,.25); background:rgba(240,242,252,.7); color:#2a3560; }
+    .tag.blue:hover { border-color:rgba(90,120,180,.5); }
+
+    /* ── Toast ── */
+    .toast {
+      position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+      background:#2a1505; color:#f5e6c8;
+      font-family:'Nunito',sans-serif; font-size:.8rem; font-weight:600;
+      padding:10px 22px; border-radius:50px;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);
+      transition:transform .3s cubic-bezier(.22,1,.36,1), opacity .3s;
+      opacity:0; pointer-events:none; white-space:nowrap; z-index:999;
+      letter-spacing:.5px;
+    }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top:36px; text-align:center;
+      animation:fadeUp .7s 1.2s ease both;
+    }
+    .footer p {
+      font-style:italic; font-size:.85rem;
+      color:rgba(120,70,20,.4); line-height:1.8;
+    }
+    .footer .heart { font-size:1.2rem; display:block; margin-top:6px; animation:heartbeat 1.8s ease-in-out infinite; }
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+<!-- Corner ornaments -->
+<div class="corner tl"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5 Q50 5 50 50 Q50 5 95 5" stroke="#8b5a00" stroke-width="1.5"/><path d="M5 5 Q5 50 50 50 Q5 50 5 95" stroke="#8b5a00" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#8b5a00"/><path d="M20 5 Q20 20 5 20" stroke="#8b5a00" stroke-width="1"/><path d="M5 20 Q20 20 20 5" stroke="#8b5a00" stroke-width="1" opacity=".5"/><circle cx="50" cy="50" r="2" fill="#c9a84c"/></svg></div>
+<div class="corner tr"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5 Q50 5 50 50 Q50 5 95 5" stroke="#8b5a00" stroke-width="1.5"/><path d="M5 5 Q5 50 50 50 Q5 50 5 95" stroke="#8b5a00" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#8b5a00"/><path d="M20 5 Q20 20 5 20" stroke="#8b5a00" stroke-width="1"/><circle cx="50" cy="50" r="2" fill="#c9a84c"/></svg></div>
+<div class="corner bl"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5 Q50 5 50 50 Q50 5 95 5" stroke="#8b5a00" stroke-width="1.5"/><path d="M5 5 Q5 50 50 50 Q5 50 5 95" stroke="#8b5a00" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#8b5a00"/><path d="M20 5 Q20 20 5 20" stroke="#8b5a00" stroke-width="1"/><circle cx="50" cy="50" r="2" fill="#c9a84c"/></svg></div>
+<div class="corner br"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 5 Q50 5 50 50 Q50 5 95 5" stroke="#8b5a00" stroke-width="1.5"/><path d="M5 5 Q5 50 50 50 Q5 50 5 95" stroke="#8b5a00" stroke-width="1.5"/><circle cx="5" cy="5" r="3" fill="#8b5a00"/><path d="M20 5 Q20 20 5 20" stroke="#8b5a00" stroke-width="1"/><circle cx="50" cy="50" r="2" fill="#c9a84c"/></svg></div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="hdr">
+    <span class="hdr-date">✦ &nbsp; Wedding Hashtags &nbsp; ✦</span>
+    <div class="names">Adhya<br><span class="amp">&amp;</span><br>Sourabh</div>
+    <span class="hdr-sub">forever starts here</span>
+  </div>
+
+  <div class="ornament"><span>✦ ❧ ✦</span></div>
+
+  <!-- THE main hashtag -->
+  <div class="main-tag-wrap">
+    <span class="main-tag-label">✦ &nbsp; The Official One &nbsp; ✦</span>
+    <div class="main-tag tag" data-tag="#AdhyaWedsSourabh">#AdhyaWedsSourabh</div>
+    <span class="main-tag-hint">tap any hashtag to copy 📋</span>
+  </div>
+
+  <div class="ornament"><span>✦</span></div>
+
+  <!-- Classic -->
+  <div class="tag-section">
+    <span class="section-title">Classic &amp; Timeless</span>
+    <div class="tag-grid">
+      <span class="tag" data-tag="#SourabhAndAdhya">#SourabhAndAdhya</span>
+      <span class="tag" data-tag="#AdhyaAndSourabh">#AdhyaAndSourabh</span>
+      <span class="tag" data-tag="#AdhyaSourabh2026">#AdhyaSourabh2026</span>
+      <span class="tag" data-tag="#TheSourabhWedding">#TheSourabhWedding</span>
+    </div>
+  </div>
+
+  <!-- Desi / Hindi -->
+  <div class="tag-section">
+    <span class="section-title">Desi Flavour</span>
+    <div class="tag-grid">
+      <span class="tag pink" data-tag="#SourabhKiAdhya">#SourabhKiAdhya</span>
+      <span class="tag pink" data-tag="#AdhyaKaSourabh">#AdhyaKaSourabh</span>
+      <span class="tag pink" data-tag="#SourabhKiDulhan">#SourabhKiDulhan</span>
+      <span class="tag pink" data-tag="#HameshaSaathAdhyaSourabh">#HameshaSaathAdhyaSourabh</span>
+    </div>
+  </div>
+
+  <!-- Punny / fun -->
+  <div class="tag-section">
+    <span class="section-title">Punny &amp; Playful</span>
+    <div class="tag-grid">
+      <span class="tag green" data-tag="#SourSweetForever">#SourSweetForever</span>
+      <span class="tag green" data-tag="#SourAdhya">#SourAdhya</span>
+      <span class="tag green" data-tag="#AdhyaFoundHerSourabh">#AdhyaFoundHerSourabh</span>
+      <span class="tag green" data-tag="#SourabhGotLucky">#SourabhGotLucky</span>
+    </div>
+  </div>
+
+  <!-- Poetic -->
+  <div class="tag-section">
+    <span class="section-title">Poetic &amp; Romantic</span>
+    <div class="tag-grid">
+      <span class="tag blue" data-tag="#FirstAndForeverSourabh">#FirstAndForeverSourabh</span>
+      <span class="tag blue" data-tag="#HerSourabh">#HerSourabh</span>
+      <span class="tag blue" data-tag="#ForeverWithAdhya">#ForeverWithAdhya</span>
+      <span class="tag blue" data-tag="#TheAdhyaSourabhStory">#TheAdhyaSourabhStory</span>
+    </div>
+  </div>
+
+  <div class="ornament"><span>✦ ❧ ✦</span></div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>May your love be as timeless<br>as your hashtag. 💍</p>
+    <span class="heart">🌹</span>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Copied! ✓</div>
+
+<script>
+var toast = document.getElementById("toast");
+var toastTimer;
+
+document.querySelectorAll(".tag").forEach(function(el) {
+  el.addEventListener("click", function() {
+    var tag = this.getAttribute("data-tag");
+    if (!tag) return;
+    /* copy to clipboard */
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(tag).catch(function(){});
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = tag; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+    /* show toast */
+    toast.textContent = "Copied " + tag + " ✓";
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 2000);
+  });
+});
+</script>
+</body>
+</html>
