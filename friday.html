@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Friday Mixtape 🎵</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=Share+Tech+Mono&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+    body {
+      min-height:100vh; min-height:100dvh;
+      background: #0a0812;
+      display: flex; flex-direction: column;
+      align-items: center; padding: 36px 18px 60px;
+      font-family: 'Nunito', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* scanline overlay */
+    body::after {
+      content:''; position:fixed; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px);
+      z-index: 100;
+    }
+
+    /* ── neon header ── */
+    .hdr { text-align:center; margin-bottom:30px; animation: fadeDown .7s .1s ease both; }
+
+    .neon-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .62rem; letter-spacing: 4px; text-transform: uppercase;
+      color: rgba(255,107,157,.6); margin-bottom: 8px; display: block;
+    }
+
+    .neon-title {
+      font-family: 'Boogaloo', cursive;
+      font-size: clamp(2.4rem, 12vw, 3.8rem);
+      letter-spacing: 3px;
+      color: #fff;
+      text-shadow:
+        0 0 6px #fff,
+        0 0 14px #fff,
+        0 0 30px #ff6b9d,
+        0 0 60px #ff6b9d,
+        0 0 80px #ff6b9d;
+      line-height: 1;
+      animation: flicker 6s 2s ease-in-out infinite;
+    }
+    @keyframes flicker {
+      0%,19%,21%,23%,25%,54%,56%,100% { text-shadow: 0 0 6px #fff,0 0 14px #fff,0 0 30px #ff6b9d,0 0 60px #ff6b9d,0 0 80px #ff6b9d; }
+      20%,24%,55% { text-shadow: none; color: rgba(255,107,157,.4); }
+    }
+
+    .hdr-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem; letter-spacing: 3px;
+      color: rgba(255,200,80,.5); margin-top: 8px;
+    }
+
+    /* ── cassette ── */
+    .cassette-wrap { margin-bottom: 28px; animation: fadeUp .8s .3s ease both; }
+
+    .cassette {
+      width: min(300px, 84vw);
+      background: linear-gradient(160deg, #e8c97a, #d4a84b);
+      border-radius: 12px;
+      padding: 14px 16px 16px;
+      box-shadow:
+        0 0 0 2px rgba(255,210,80,.15),
+        0 12px 40px rgba(0,0,0,.7),
+        inset 0 1px 0 rgba(255,255,255,.25);
+      position: relative;
+    }
+
+    /* screws */
+    .screw {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #c8a84a, #6b5010);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.5);
+    }
+    .screw::after {
+      content: '+'; position: absolute;
+      font-size: .45rem; color: rgba(0,0,0,.4);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    .screw.tl { top: 8px; left: 10px; }
+    .screw.tr { top: 8px; right: 10px; }
+    .screw.bl { bottom: 8px; left: 10px; }
+    .screw.br { bottom: 8px; right: 10px; }
+
+    /* window */
+    .window {
+      background: #111;
+      border-radius: 8px;
+      padding: 10px 14px 8px;
+      margin-bottom: 10px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,.8);
+      display: flex; align-items: center; gap: 0;
+      position: relative; overflow: hidden;
+    }
+    .reel {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 36%, #2a2a2a, #111);
+      border: 2.5px solid #333;
+      position: relative; flex-shrink: 0;
+    }
+    .reel::before {
+      content: '';
+      position: absolute; inset: 6px; border-radius: 50%;
+      border: 1.5px dashed rgba(255,255,255,.12);
+    }
+    .reel::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: conic-gradient(from 0deg, transparent 0%, transparent 8%, rgba(255,255,255,.07) 8%, rgba(255,255,255,.07) 16%, transparent 16%);
+      border-radius: 50%;
+    }
+    .reel.spin { animation: spin 1.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .tape-mid {
+      flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      padding: 0 4px;
+    }
+    .tape-line {
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, #222, #444, #222);
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+
+    /* label strip */
+    .label-strip {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 6px;
+    }
+    .label-strip .lname {
+      font-family: 'Boogaloo', cursive;
+      font-size: 1rem; color: #5a3a00; letter-spacing: 2px;
+    }
+    .label-strip .lside {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .58rem; color: rgba(90,58,0,.65); letter-spacing: 1px;
+    }
+
+    /* ── LCD display ── */
+    .lcd {
+      width: min(300px,84vw);
+      background: #0a1a0a;
+      border: 1px solid rgba(57,255,20,.18);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 16px rgba(57,255,20,.06), inset 0 1px 0 rgba(57,255,20,.08);
+      animation: fadeUp .7s .5s ease both;
+      min-height: 66px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .lcd-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .5rem; letter-spacing: 3px; color: rgba(57,255,20,.35);
+      margin-bottom: 4px;
+    }
+    .lcd-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .8rem; color: rgba(57,255,20,.8);
+      line-height: 1.5; letter-spacing: .5px;
+    }
+    .lcd-text.typing::after {
+      content: '|'; animation: blink .7s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── tracklist ── */
+    .tracklist {
+      width: min(300px,84vw);
+      display: flex; flex-direction: column; gap: 3px;
+      animation: fadeUp .7s .6s ease both;
+    }
+    .track-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .52rem; letter-spacing: 3px; color: rgba(255,200,80,.35);
+      margin-bottom: 8px; padding-left: 4px;
+    }
+    .track {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .2s, border-color .2s;
+    }
+    .track:hover  { background: rgba(255,107,157,.07); border-color: rgba(255,107,157,.15); }
+    .track.active { background: rgba(255,107,157,.1);  border-color: rgba(255,107,157,.3); }
+    .track-num {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .58rem; color: rgba(255,200,80,.4); width: 16px; flex-shrink: 0;
+    }
+    .track.active .track-num { color: #ff6b9d; }
+    .track-name { font-size: .88rem; font-weight: 700; color: rgba(240,230,255,.7); flex: 1; }
+    .track.active .track-name { color: #fff; }
+    .track-dur {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .6rem; color: rgba(255,255,255,.2);
+    }
+    .track.active .track-dur { color: rgba(255,107,157,.6); }
+    .track-icon { font-size: .75rem; width: 14px; flex-shrink: 0; }
+
+    /* now-playing equaliser bars */
+    .eq { display:flex; gap:2px; align-items:flex-end; height:14px; width:14px; flex-shrink:0; }
+    .eq span {
+      display:block; width:3px; border-radius:1px;
+      background:#ff6b9d;
+      animation: eqBar .5s ease-in-out infinite alternate;
+    }
+    .eq span:nth-child(2){ animation-delay:.15s; }
+    .eq span:nth-child(3){ animation-delay:.3s; }
+    @keyframes eqBar { from{height:3px} to{height:14px} }
+
+    @keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeDown { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
+  </style>
+</head>
+<body>
+
+<div class="hdr">
+  <span class="neon-tag">✦ for adhya ✦</span>
+  <h1 class="neon-title">FRIDAY<br>MIXTAPE</h1>
+  <p class="hdr-sub">SIDE A &nbsp;·&nbsp; 8 TRACKS &nbsp;·&nbsp; MADE WITH LOVE</p>
+</div>
+
+<!-- Cassette -->
+<div class="cassette-wrap">
+  <div class="cassette">
+    <div class="screw tl"></div><div class="screw tr"></div>
+    <div class="screw bl"></div><div class="screw br"></div>
+    <div class="window">
+      <div class="reel" id="reelL"></div>
+      <div class="tape-mid">
+        <div class="tape-line"></div>
+        <div class="tape-line" style="opacity:.4;margin-top:2px;"></div>
+      </div>
+      <div class="reel" id="reelR"></div>
+    </div>
+    <div class="label-strip">
+      <span class="lname">ADHYA MIX</span>
+      <span class="lside">FRIDAY / SIDE A</span>
+    </div>
+  </div>
+</div>
+
+<!-- LCD -->
+<div class="lcd">
+  <div class="lcd-label">NOW PLAYING</div>
+  <div class="lcd-text" id="lcdText">— tap any track to play —</div>
+</div>
+
+<!-- Tracklist -->
+<div class="tracklist">
+  <div class="track-label">TRACKLIST ▾</div>
+  <div id="tracks"></div>
+</div>
+
+<script>
+var TRACKS = [
+  { name: "You Are My Favourite Part of Any Day",      dur: "3:42", msg: "Genuinely. Morning, afternoon, 2 AM — any time works when it is you." },
+  { name: "Still Thinking About the Last Time I Saw You", dur: "4:15", msg: "It keeps replaying. All the small moments. I do not want it to stop." },
+  { name: "Friday Without You Hits Different",          dur: "2:58", msg: "The weekend shows up and the first thing I think is — I wish you were here." },
+  { name: "The Way You Smile Should Be a Crime",        dur: "5:01", msg: "Completely unfair. You do not even try. That is what makes it worse." },
+  { name: "Missing You Like the Weekend Misses Mondays",dur: "3:33", msg: "Desperately, reliably, every single time — without fail." },
+  { name: "You Make Everything Better (Acoustic)",      dur: "3:21", msg: "The room, the day, the mood, the whole thing. Better. Just because you are in it." },
+  { name: "Can't Wait to See You Again",                dur: "4:47", msg: "Already counting down. Already planning excuses. Already very much yours." },
+  { name: "Goodnight From Wherever I Am",               dur: "4:55", msg: "Same stars, different sky. Thinking of you, as always. Sleep well, sunshine. 🌙" }
+];
+
+var cur = -1;
+var playing = false;
+var typingTimer = null;
+var lcdEl = document.getElementById("lcdText");
+var reelL = document.getElementById("reelL");
+var reelR = document.getElementById("reelR");
+var tracksEl = document.getElementById("tracks");
+
+/* build tracks */
+TRACKS.forEach(function(t, i) {
+  var div = document.createElement("div");
+  div.className = "track";
+  div.innerHTML =
+    "<span class='track-num'>" + (i < 9 ? "0" : "") + (i+1) + "</span>" +
+    "<span class='track-icon' id='icon" + i + "'>&#9654;</span>" +
+    "<span class='track-name'>" + t.name + "</span>" +
+    "<span class='track-dur'>" + t.dur + "</span>";
+  div.addEventListener("click", function() { play(i); });
+  tracksEl.appendChild(div);
+});
+
+function play(idx) {
+  /* deactivate old */
+  if (cur >= 0) {
+    tracksEl.children[cur].classList.remove("active");
+    var oldIcon = document.getElementById("icon" + cur);
+    oldIcon.innerHTML = "&#9654;";
+  }
+
+  cur = idx;
+  var row = tracksEl.children[idx];
+  row.classList.add("active");
+  var icon = document.getElementById("icon" + idx);
+  icon.innerHTML = "<div class='eq'><span></span><span></span><span></span></div>";
+
+  /* spin reels */
+  reelL.classList.add("spin");
+  reelR.classList.add("spin");
+
+  /* type message into LCD */
+  var msg = TRACKS[idx].msg;
+  lcdEl.textContent = "";
+  lcdEl.classList.add("typing");
+  if (typingTimer) clearInterval(typingTimer);
+  var i = 0;
+  typingTimer = setInterval(function() {
+    lcdEl.textContent += msg[i];
+    i++;
+    if (i >= msg.length) {
+      clearInterval(typingTimer);
+      lcdEl.classList.remove("typing");
+    }
+  }, 28);
+}
+</script>
+</body>
+</html>
