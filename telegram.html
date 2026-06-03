@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Telegram for Adhya</title>
+  <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital@1&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;
+      background:#1a110a;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px 16px;
+      font-family:'Special Elite',monospace;
+    }
+
+    /* paper */
+    .paper{
+      position:relative;
+      background:#f2deb0;
+      max-width:580px;
+      width:100%;
+      padding:0;
+      border-radius:3px;
+      box-shadow:
+        0 0 0 1px #b8955a,
+        0 4px 6px rgba(0,0,0,.3),
+        0 12px 40px rgba(0,0,0,.5),
+        inset 0 0 80px rgba(160,110,40,.12);
+      overflow:hidden;
+    }
+
+    /* grain overlay */
+    .paper::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events:none;
+      z-index:5;
+      opacity:.55;
+    }
+
+    /* top stripe */
+    .top-stripe{
+      background:#1a110a;
+      padding:10px 28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .top-stripe .co{
+      font-size:.6rem;
+      letter-spacing:3px;
+      text-transform:uppercase;
+      color:#c8a46e;
+    }
+    .top-stripe .lines{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+    .top-stripe .line{height:1px;background:#c8a46e;opacity:.4}
+
+    /* header band */
+    .hdr-band{
+      border-bottom:2px solid #9a7840;
+      padding:18px 28px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .service-name{
+      font-family:'Playfair Display',Georgia,serif;
+      font-style:italic;
+      font-size:1.55rem;
+      color:#3d2206;
+      line-height:1;
+    }
+    .service-sub{font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:#9a7840;margin-top:3px}
+
+    /* URGENT stamp */
+    .stamp{
+      border:3px solid #b02020;
+      color:#b02020;
+      padding:4px 12px;
+      font-size:.7rem;
+      letter-spacing:4px;
+      text-transform:uppercase;
+      transform:rotate(-8deg);
+      opacity:.85;
+      flex-shrink:0;
+    }
+
+    /* meta fields */
+    .meta{
+      border-bottom:1px solid #c4a060;
+      padding:14px 28px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px 20px;
+    }
+    .field{font-size:.65rem;letter-spacing:1px;color:#3d2206}
+    .field span{color:#9a7840;text-transform:uppercase;margin-right:4px;font-size:.58rem;letter-spacing:2px}
+    .field.full{grid-column:1/-1}
+
+    /* message area */
+    .msg-area{padding:24px 28px 20px}
+    .msg-label{font-size:.55rem;letter-spacing:4px;text-transform:uppercase;color:#9a7840;border-bottom:1px dashed #c4a060;padding-bottom:8px;margin-bottom:20px}
+
+    /* telegram lines */
+    .tline{
+      font-size:clamp(.78rem,2.6vw,.88rem);
+      color:#2a1506;
+      line-height:1;
+      margin-bottom:13px;
+      opacity:0;
+      animation:typeIn .04s ease forwards;
+    }
+    .tline .stop{color:#b02020;font-size:.75em;margin-left:2px}
+    .tline.gap{margin-bottom:22px}
+    .tline.big{font-size:clamp(.88rem,3vw,1rem);color:#1a0a00;font-weight:700}
+    .tline.indent{padding-left:20px}
+
+    @keyframes typeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+
+    /* signature */
+    .sig-area{
+      border-top:1px dashed #c4a060;
+      padding:16px 28px 24px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .sig-script{
+      font-family:'Playfair Display',Georgia,serif;
+      font-style:italic;
+      font-size:1.6rem;
+      color:#3d2206;
+      line-height:1;
+    }
+    .sig-note{font-size:.6rem;letter-spacing:2px;color:#9a7840;text-transform:uppercase;margin-top:4px}
+
+    /* wax seal */
+    .seal{
+      width:64px;height:64px;
+      background:radial-gradient(circle at 38% 36%,#e03030,#8b0000);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 3px 10px rgba(0,0,0,.35),inset 0 -2px 4px rgba(0,0,0,.3);
+      position:relative;
+      flex-shrink:0;
+    }
+    .seal::before{
+      content:'';
+      position:absolute;
+      inset:5px;
+      border-radius:50%;
+      border:1px solid rgba(255,200,200,.25);
+    }
+    .seal-text{font-size:1.4rem;line-height:1}
+
+    /* reply btn */
+    .reply-wrap{text-align:center;padding:0 28px 28px}
+    .reply-btn{
+      background:transparent;
+      border:1px solid #9a7840;
+      color:#9a7840;
+      font-family:'Special Elite',monospace;
+      font-size:.65rem;
+      letter-spacing:3px;
+      text-transform:uppercase;
+      padding:10px 24px;
+      cursor:pointer;
+      transition:all .2s;
+    }
+    .reply-btn:hover{background:#9a7840;color:#f2deb0}
+
+    /* reply telegram */
+    .reply-paper{
+      display:none;
+      background:#e8f5e9;
+      border:1px solid #7b9e6e;
+      border-radius:2px;
+      margin:0 28px 28px;
+      padding:18px 20px;
+      position:relative;
+    }
+    .reply-paper.show{display:block;animation:fadeIn .5s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .reply-paper .reply-from{font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:#4a7a40;margin-bottom:10px}
+    .reply-paper .reply-line{font-size:.8rem;color:#1a3010;line-height:1;margin-bottom:10px}
+    .reply-paper .reply-line .stop{color:#4a7a40;font-size:.7em;margin-left:2px}
+    .reply-paper .r-sig{font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:1.2rem;color:#2d5a20;margin-top:8px}
+  </style>
+</head>
+<body>
+
+<div class="paper">
+
+  <!-- top stripe -->
+  <div class="top-stripe">
+    <span class="co">✦ Imperial Telegraph Co. ✦</span>
+    <div class="lines">
+      <div class="line" style="width:48px"></div>
+      <div class="line" style="width:32px"></div>
+    </div>
+  </div>
+
+  <!-- header -->
+  <div class="hdr-band">
+    <div>
+      <div class="service-name">Love Telegram</div>
+      <div class="service-sub">Express Delivery — Hand of Heart</div>
+    </div>
+    <div class="stamp">URGENT</div>
+  </div>
+
+  <!-- meta -->
+  <div class="meta">
+    <div class="field"><span>To:</span> ADHYA</div>
+    <div class="field"><span>From:</span> SOURABH</div>
+    <div class="field"><span>Date:</span> 03 JUNE 2026</div>
+    <div class="field"><span>Priority:</span> EXTREMELY HIGH</div>
+    <div class="field full"><span>Re:</span> BEING UNREASONABLY CUTE AND OTHER OFFENCES</div>
+  </div>
+
+  <!-- message -->
+  <div class="msg-area">
+    <div class="msg-label">Message follows — word for word — no edits</div>
+
+    <div id="lines"></div>
+  </div>
+
+  <!-- signature -->
+  <div class="sig-area">
+    <div>
+      <div class="sig-script">Sourabh</div>
+      <div class="sig-note">Transmitted with love · No refunds</div>
+    </div>
+    <div class="seal"><span class="seal-text">💌</span></div>
+  </div>
+
+  <!-- reply -->
+  <div class="reply-wrap">
+    <button class="reply-btn" id="replyBtn">+ Request Reply Telegram</button>
+  </div>
+
+  <div class="reply-paper" id="replyPaper">
+    <div class="reply-from">Reply from: ADHYA &nbsp;·&nbsp; Received: 03 JUNE 2026</div>
+    <div id="replyLines"></div>
+    <div class="r-sig">Adhya</div>
+  </div>
+
+</div>
+
+<script>
+var LINES = [
+  {t:"YOU WALKED UP THOSE STAIRS TWO MONTHS AGO", stop:true},
+  {t:"I WAS ALREADY SITTING AT THE TABLE", stop:true},
+  {t:"I WAS NOT PREPARED", stop:true, gap:true},
+  {t:"THIS IS ENTIRELY YOUR FAULT", stop:true, gap:true},
+  {t:"I HAVE BEEN THINKING ABOUT YOU SINCE THAT DAY", stop:true},
+  {t:"EVERY MORNING WITHOUT EXCEPTION", stop:true},
+  {t:"EVERY TIME SOMETHING GOOD HAPPENS", stop:true},
+  {t:"YOU ARE THE FIRST PERSON I WANT TO TELL", stop:true, gap:true},
+  {t:"I REGRET TO INFORM YOU OF THE FOLLOWING", stop:true},
+  {t:"YOU ARE TOO CUTE", stop:true, indent:true},
+  {t:"YOUR LAUGH IS A PROBLEM", stop:true, indent:true},
+  {t:"I THINK ABOUT YOU AT ENTIRELY INCONVENIENT TIMES", stop:true, indent:true},
+  {t:"I AM NOT SORRY", stop:true, gap:true},
+  {t:"FURTHER INVESTIGATION HAS CONFIRMED", stop:true},
+  {t:"I AM COMPLETELY AND NON-NEGOTIABLY YOURS", stop:true, big:true, gap:true},
+  {t:"NO RETURNS ACCEPTED", stop:true},
+  {t:"TERMS ARE FINAL", stop:true},
+  {t:"END OF TRANSMISSION", stop:true}
+];
+
+var REPLY = [
+  {t:"RECEIVED YOUR TELEGRAM", stop:true},
+  {t:"NOTED ALL COMPLAINTS", stop:true},
+  {t:"OFFER NO APOLOGY FOR THE STAIRS", stop:true, gap:true},
+  {t:"CONFIRM RECEIPT OF YOUR FEELINGS", stop:true},
+  {t:"RETURNING THEM FULLY", stop:true},
+  {t:"PLUS EXTRA", stop:true, gap:true},
+  {t:"TERMS ACCEPTED", stop:true},
+  {t:"SEE YOU SOON", stop:true}
+];
+
+function makeLine(d) {
+  var el = document.createElement("div");
+  var cls = "tline";
+  if (d.gap) cls += " gap";
+  if (d.big) cls += " big";
+  if (d.indent) cls += " indent";
+  el.className = cls;
+  el.innerHTML = d.t + (d.stop ? '<span class="stop"> STOP</span>' : "");
+  return el;
+}
+
+var container = document.getElementById("lines");
+LINES.forEach(function(d, i) {
+  var el = makeLine(d);
+  el.style.animationDelay = (0.3 + i * 0.12) + "s";
+  container.appendChild(el);
+});
+
+document.getElementById("replyBtn").addEventListener("click", function() {
+  var paper = document.getElementById("replyPaper");
+  paper.classList.add("show");
+  this.style.display = "none";
+  var rc = document.getElementById("replyLines");
+  REPLY.forEach(function(d, i) {
+    var el = makeLine(d);
+    el.style.animationDelay = (0.2 + i * 0.1) + "s";
+    rc.appendChild(el);
+  });
+});
+</script>
+</body>
+</html>
