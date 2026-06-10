@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reviews — The First Floor Restaurant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:#f1f3f4;
+      font-family:'Roboto',sans-serif;
+      min-height:100vh;
+      padding:0 0 60px;
+      color:#202124;
+    }
+
+    /* top bar */
+    .topbar{
+      background:#fff;
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-bottom:1px solid #e0e0e0;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .g-logo{font-size:1.3rem;font-weight:700;letter-spacing:-1px}
+    .g-logo span:nth-child(1){color:#4285f4}
+    .g-logo span:nth-child(2){color:#ea4335}
+    .g-logo span:nth-child(3){color:#fbbc05}
+    .g-logo span:nth-child(4){color:#4285f4}
+    .g-logo span:nth-child(5){color:#34a853}
+    .g-logo span:nth-child(6){color:#ea4335}
+    .search-bar{
+      flex:1;
+      background:#f1f3f4;
+      border-radius:24px;
+      padding:8px 16px;
+      font-size:.85rem;
+      color:#5f6368;
+      border:1px solid #e0e0e0;
+    }
+
+    /* place header */
+    .place-card{
+      background:#fff;
+      margin:12px 12px 0;
+      border-radius:12px;
+      overflow:hidden;
+      box-shadow:0 1px 4px rgba(0,0,0,.1);
+    }
+    .place-img{
+      width:100%;
+      height:160px;
+      background:linear-gradient(135deg,#d4a96a 0%,#8b5e2a 100%);
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .place-img::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.5));
+    }
+    /* neon heart decoration */
+    .neon-heart{
+      font-size:3rem;
+      filter:drop-shadow(0 0 12px #f9a825) drop-shadow(0 0 24px #f9a825);
+      position:relative;
+      z-index:1;
+      opacity:.85;
+    }
+    .place-img-label{
+      position:absolute;
+      bottom:10px;
+      left:14px;
+      color:#fff;
+      font-size:.7rem;
+      letter-spacing:1px;
+      z-index:1;
+      opacity:.8;
+    }
+
+    .place-info{padding:16px}
+    .place-name{font-size:1.2rem;font-weight:500;margin-bottom:4px}
+    .place-cat{font-size:.8rem;color:#5f6368;margin-bottom:8px}
+    .place-rating-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .big-rating{font-size:1.4rem;font-weight:700;color:#202124}
+    .stars-row{display:flex;gap:1px}
+    .star{color:#fbbc05;font-size:1rem}
+    .review-count{font-size:.8rem;color:#5f6368}
+    .place-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      border:1px solid #dadce0;
+      border-radius:20px;
+      padding:5px 12px;
+      font-size:.75rem;
+      color:#3c4043;
+      cursor:default;
+    }
+
+    /* section divider */
+    .section-head{
+      padding:16px 16px 8px;
+      font-size:.75rem;
+      font-weight:500;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:#5f6368;
+    }
+
+    /* review card */
+    .review-card{
+      background:#fff;
+      margin:0 12px 10px;
+      border-radius:12px;
+      padding:18px 16px;
+      box-shadow:0 1px 4px rgba(0,0,0,.08);
+      opacity:0;
+      transform:translateY(16px);
+      transition:opacity .55s ease, transform .55s ease;
+    }
+    .review-card.in{opacity:1;transform:translateY(0)}
+
+    .reviewer-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .avatar{
+      width:40px;height:40px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#4285f4,#34a853);
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:700;font-size:.95rem;
+      flex-shrink:0;
+    }
+    .reviewer-info{}
+    .reviewer-name{font-size:.9rem;font-weight:500}
+    .reviewer-meta{font-size:.72rem;color:#5f6368;margin-top:1px}
+
+    .review-stars{display:flex;gap:1px;margin-bottom:4px}
+    .review-stars .star{font-size:.85rem}
+    .review-date{font-size:.72rem;color:#5f6368;margin-bottom:10px}
+
+    .review-text{font-size:.88rem;line-height:1.7;color:#3c4043}
+    .review-text em{color:#1a73e8;font-style:normal;font-weight:500}
+    .review-text .her{color:#d93025;font-weight:500;font-style:normal}
+
+    .review-actions{
+      display:flex;gap:16px;margin-top:14px;padding-top:12px;
+      border-top:1px solid #f1f3f4;
+    }
+    .r-btn{
+      font-size:.78rem;color:#5f6368;
+      background:none;border:none;cursor:pointer;
+      display:flex;align-items:center;gap:4px;
+      font-family:'Roboto',sans-serif;
+    }
+    .r-btn:hover{color:#3c4043}
+
+    /* owner reply */
+    .owner-reply{
+      background:#f8f9fa;
+      border-radius:8px;
+      padding:12px 14px;
+      margin-top:12px;
+    }
+    .owner-reply-head{font-size:.75rem;font-weight:500;color:#3c4043;margin-bottom:6px}
+    .owner-reply-text{font-size:.82rem;color:#5f6368;line-height:1.6}
+
+    /* final card — special */
+    .final-card{
+      background:#fff;
+      margin:0 12px 10px;
+      border-radius:12px;
+      padding:24px 20px;
+      box-shadow:0 1px 8px rgba(0,0,0,.1);
+      border:2px solid #fce4ec;
+      opacity:0;
+      transform:translateY(16px);
+      transition:opacity .6s ease, transform .6s ease;
+    }
+    .final-card.in{opacity:1;transform:translateY(0)}
+    .final-script{
+      font-family:'Great Vibes',cursive;
+      font-size:clamp(1.6rem,6vw,2rem);
+      color:#c62828;
+      line-height:1.4;
+      margin:12px 0;
+    }
+    .final-small{font-size:.78rem;color:#b0bec5;letter-spacing:2px;text-transform:uppercase}
+
+    /* helpful counter easter egg */
+    .helpful-count{font-size:.72rem;color:#5f6368;margin-left:4px}
+  </style>
+</head>
+<body>
+
+<!-- top bar -->
+<div class="topbar">
+  <div class="g-logo">
+    <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+  </div>
+  <div class="search-bar">The First Floor Restaurant</div>
+</div>
+
+<!-- place card -->
+<div class="place-card">
+  <div class="place-img">
+    <div class="neon-heart">🤍</div>
+    <span class="place-img-label">First Floor · Family Dining</span>
+  </div>
+  <div class="place-info">
+    <div class="place-name">The First Floor Restaurant</div>
+    <div class="place-cat">Restaurant · Family dining · ₹₹</div>
+    <div class="place-rating-row">
+      <span class="big-rating">5.0</span>
+      <div class="stars-row">
+        <span class="star">★</span><span class="star">★</span>
+        <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+      </div>
+      <span class="review-count">(reviews by Sourabh S.)</span>
+    </div>
+    <div class="place-tags">
+      <span class="tag">Dine-in</span>
+      <span class="tag">Good for families</span>
+      <span class="tag">Life-changing</span>
+      <span class="tag">Staircase ⭐</span>
+    </div>
+  </div>
+</div>
+
+<div class="section-head">Reviews</div>
+
+<!-- Review 1 - Day of visit -->
+<div class="review-card">
+  <div class="reviewer-row">
+    <div class="avatar">S</div>
+    <div class="reviewer-info">
+      <div class="reviewer-name">Sourabh S.</div>
+      <div class="reviewer-meta">Local Guide · 1 review</div>
+    </div>
+  </div>
+  <div class="review-stars">
+    <span class="star">★</span><span class="star">★</span>
+    <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+  </div>
+  <div class="review-date">3 April 2026 · Visited on 3 April 2026</div>
+  <div class="review-text">
+    Good restaurant. Nice ambiance. Was here for a family lunch, first floor seating.
+    Food was decent — I think. I was already sitting at my table when
+    <span class="her">she came up the stairs.</span>
+    Pink dress. Quiet confidence. Walked up like she owned the room.
+    I do not remember what I ordered after that.
+    Would recommend. 5 stars. The neon heart on the ceiling felt appropriate.
+  </div>
+  <div class="review-actions">
+    <button class="r-btn" onclick="helpful(this)">👍 Helpful <span class="helpful-count">1</span></button>
+    <button class="r-btn">💬 Share</button>
+  </div>
+</div>
+
+<!-- Review 2 - One week later -->
+<div class="review-card">
+  <div class="reviewer-row">
+    <div class="avatar">S</div>
+    <div class="reviewer-info">
+      <div class="reviewer-name">Sourabh S.</div>
+      <div class="reviewer-meta">Local Guide · 2 reviews</div>
+    </div>
+  </div>
+  <div class="review-stars">
+    <span class="star">★</span><span class="star">★</span>
+    <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+  </div>
+  <div class="review-date">10 April 2026 · Updated review</div>
+  <div class="review-text">
+    Updating my earlier review. Came back to add more detail.<br><br>
+    The food: fine. The chai: decent. The lighting: warm and nice.<br><br>
+    What I actually remember: <span class="her">she came up from downstairs.</span>
+    I was already there. She appeared at the top of the staircase.
+    It has been one week and I have thought about that moment
+    approximately <em>every single day.</em>
+    The restaurant is not responsible for this. I think.
+    Still 5 stars.
+  </div>
+  <div class="owner-reply">
+    <div class="owner-reply-head">Response from owner:</div>
+    <div class="owner-reply-text">Thank you for your kind review! We are glad you enjoyed the ambiance. We hope to see you again soon. 🙏</div>
+  </div>
+  <div class="review-actions">
+    <button class="r-btn" onclick="helpful(this)">👍 Helpful <span class="helpful-count">3</span></button>
+    <button class="r-btn">💬 Share</button>
+  </div>
+</div>
+
+<!-- Review 3 - One month -->
+<div class="review-card">
+  <div class="reviewer-row">
+    <div class="avatar">S</div>
+    <div class="reviewer-info">
+      <div class="reviewer-name">Sourabh S.</div>
+      <div class="reviewer-meta">Local Guide · 3 reviews</div>
+    </div>
+  </div>
+  <div class="review-stars">
+    <span class="star">★</span><span class="star">★</span>
+    <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+  </div>
+  <div class="review-date">3 May 2026 · One month update</div>
+  <div class="review-text">
+    It has been one month. I feel it is only fair to update this review again.<br><br>
+    I cannot tell you what was on the menu because I genuinely cannot remember.
+    What I can tell you is that I have spoken to <span class="her">Adhya</span> every single day since that lunch.
+    Every. Single. Day.<br><br>
+    I came here for family biryani or something. I left a completely different person.
+    The restaurant deserves credit for the location, the staircase, and the neon heart
+    which was either a coincidence or the universe being extremely obvious.
+    <em>5 stars. Would fall in love again.</em>
+  </div>
+  <div class="review-actions">
+    <button class="r-btn" onclick="helpful(this)">👍 Helpful <span class="helpful-count">12</span></button>
+    <button class="r-btn">💬 Share</button>
+  </div>
+</div>
+
+<!-- Review 4 - Two months - final -->
+<div class="final-card" id="finalCard">
+  <div class="reviewer-row">
+    <div class="avatar" style="background:linear-gradient(135deg,#e91e63,#9c27b0)">S</div>
+    <div class="reviewer-info">
+      <div class="reviewer-name">Sourabh S.</div>
+      <div class="reviewer-meta">Local Guide · 4 reviews · Two months later</div>
+    </div>
+  </div>
+  <div class="review-stars">
+    <span class="star">★</span><span class="star">★</span>
+    <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+  </div>
+  <div class="review-date">3 June 2026 · Two month update · Final review (probably)</div>
+  <div class="review-text">
+    Two months.<br><br>
+    I have now written four reviews of this restaurant.
+    I am aware this is unusual behaviour for a dining establishment.<br><br>
+    Here is what I know two months later:
+    the food was not the point.
+    The staircase was the point.
+    <span class="her">She</span> was the point.<br><br>
+    <span class="her">Adhya</span> came up those stairs and I was already sitting there
+    and something just — shifted. And it has not shifted back.
+    And I do not want it to.<br><br>
+    I think about her when I wake up. I think about her at 10:47 during work.
+    I think about her at 23:59 before I sleep.
+    She is the best thing that has happened to me and she arrived
+    via a staircase in a restaurant I came to for a family lunch.<br><br>
+    <em>Life is very strange and also very good.</em>
+  </div>
+
+  <div class="final-script">Happy 2 months, Adhya. 🤍</div>
+  <div class="final-small">from the guy who was already sitting there</div>
+
+  <div class="review-actions" style="margin-top:16px">
+    <button class="r-btn" onclick="helpful(this)">👍 Helpful <span class="helpful-count">∞</span></button>
+    <button class="r-btn">💬 Share</button>
+  </div>
+</div>
+
+<script>
+var cards = document.querySelectorAll(".review-card, .final-card");
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add("in"); obs.unobserve(e.target); }
+  });
+}, {threshold: 0.1});
+cards.forEach(function(c) { obs.observe(c); });
+
+function helpful(btn) {
+  var span = btn.querySelector(".helpful-count");
+  var val = span.textContent;
+  if (val !== "infinity" && val !== "inf") {
+    var n = parseInt(val);
+    if (!isNaN(n)) span.textContent = n + 1;
+  }
+}
+</script>
+</body>
+</html>
